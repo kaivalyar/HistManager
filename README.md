@@ -3,6 +3,30 @@
 
 A tool to manage terminal history for Bash based Linux environments.
 
+## Table of Contents
+  * [Synopsis](#synopsis)
+    * [Motivation](#motivation)
+    * [Objective](#objective)
+    * [Strategy](#strategy)
+    * [Pizzazz](#pizzazz)
+      * [The Settings Menu](#the-settings-menu)
+      * [Quirks and Hacks](#quirks-and-hacks)
+  * [Setup](#setup)
+    * [Installation](#installation)
+    * [Uninstallation](#uninstallation)
+  * [Documentation](#documentation)
+  * [Samples](#samples)
+    1. [Installation](1.-installation)
+    2. [Creating Environments](2.-creating-environments)
+    1. [Using HistManager](3.-using-histmanager)
+    1. [Renaming and Archiving Environments](4.-renaming-and-archiving-environments)
+    1. [Restoring Environments](5.-restoring-environments)
+    1. [Uninstallation](6.-uninstallation)
+  * [Contact](#contact)
+  * [License](#license)
+    * [Author's Note](#author's-note)
+    * [Complete License Information](#complete-license-information)
+
 ## Synopsis
 
 ### Motivation
@@ -19,7 +43,7 @@ Apart from all the user generated environments, there is another, 'Master' envir
 ### Pizzazz
 Apart from just replacing the `.bash_history` file appropriately, HistManager provides some more features.
 
-#### The HistManager Settings Menu
+#### HistManager Settings Menu
 Enabling the user to create new environments is the only necessary feature required for HistManager to function. However, HistManager goes beyond this and allows renaming, merging and archiving existing environments. These features can be accessed from the `HistManager Settings` menu.
 
 #### Quirks and Hacks
@@ -95,7 +119,7 @@ Please restart the Terminal to start using HistManager.
 ... ~ $ 
 ```
 
-#### 2. Creating Some Environments
+#### 2. Creating Environments
 Creating two environments:
 1. SudoInstalls - for doing all installation related work, will contain multiple `sudo apt-get` commands
 2. CS101 - for doing all work related to college course CS101, will probably be a software project
@@ -396,13 +420,13 @@ Please restart the Terminal.
 ... ~ $ 
 ```
 
-## Contact and More
+## Contact
 
 HistManagerBETA was released on July 1, 2016. If you have any questions, wish to report bugs, or to contribute to this project, simply write to [histmanager@gmail.com](mailto:histmanager@gmail.com) (yes, emails shall be responded to promptly).
 
 ## License
 
-### Authors Note
+### Author's Note
 This is an Open-Source project. Contributions are welcome (I could use the help)! You are free to use this project (modified or otherwise) whichever way you please - as long as you continue to keep it open and free.
 
 ### Complete License Information
