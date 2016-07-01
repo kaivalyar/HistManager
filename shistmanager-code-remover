@@ -1,0 +1,114 @@
+#!/usr/bin/bash
+
+# Confirm Uninstall - we don't want to see you go!
+echo ""
+while true; do
+    read -p "Do you wish to uninstall HistManagerBETA?(y/n)       " yn
+    case $yn in
+        [Yy]* ) echo ""; break;;
+        [Nn]* ) echo ""; echo "Quiting HistManagerBETA uninstaller."; exit;;
+        * ) echo "  invalid input";; #"Do you wish to install HistManagerBETA?(y/n)        ";;
+    esac
+done
+
+# Starting Uninstall
+echo "Uninstalling HistManagerBETA"
+echo ""
+
+# create multiple (hidden) backups, remove histmanager from terminal startup config
+python3 ~/.khist/HistManager-Uninstall.py
+{
+    sleep 0.5
+    printf "%s" "Removing HistManagerBETA from Terminal Startup Config"
+    sleep 0.5
+    printf "%s" " ."
+    sleep 0.5
+    printf "%s" "."
+    sleep 0.5
+    printf "%s" "."
+    sleep 0.5
+    printf "%s" ". "
+    sleep 0.5
+    echo "[Done]"
+    sleep 0.5
+} # Fancy Display
+{
+    sleep 0.5
+    printf "%s" "Creating backup of Terminal History"
+    # as on $(date +%y-%m-%d)"
+    sleep 0.5
+    printf "%s" " ."
+    sleep 0.5
+    printf "%s" "."
+    sleep 0.5
+    printf "%s" "."
+    sleep 0.5
+    printf "%s" ". "
+    sleep 0.5
+    echo "[Done]"
+    sleep 0.5
+} # Fancy Display
+
+# Restore Default History Management
+mv ~/.khist/history/Master.khtxt ~/.bash_history
+{
+    sleep 0.5
+    printf "%s" "Restoring original History Settings"
+    sleep 0.5
+    printf "%s" " ."
+    sleep 0.5
+    printf "%s" "."
+    sleep 0.5
+    printf "%s" "."
+    sleep 0.5
+    printf "%s" ". "
+    sleep 0.5
+    echo "[Done]"
+    sleep 0.5
+}
+
+# Clean Up
+mv ~/uninstall-histmanager.sh ~/.khist/uninstallfile_archived.sh
+rm -rf ~/.khist/
+{
+    sleep 0.5
+    printf "%s" "Deleting HistManagerBETA Data and Programs"
+    sleep 0.5
+    printf "%s" " ."
+    sleep 0.5
+    printf "%s" "."
+    sleep 0.5
+    printf "%s" "."
+    sleep 0.5
+    printf "%s" ". "
+    sleep 1.5
+    echo "[Done]"
+    sleep 0.5
+}
+
+# GoodBye!
+sleep 3
+echo ""
+echo "Successfully Uninstalled HistManagerBETA"
+sleep 1
+echo "Please restart the Terminal."
+sleep 1
+echo ""
+
+exit
+
+#   HistManager - Effectively Manage Terminal History
+#   Copyright (C) 2016  Kaivalya Rawal (histmanager@gmail.com)
+#
+#   This program is free software: you can redistribute it and/or modify
+#   it under the terms of the GNU Affero General Public License as published by
+#   the Free Software Foundation, either version 3 of the License, or 
+#   any later version.
+#
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+#   GNU Affero General Public License for more details.
+
+#   You should have received a copy of the GNU Affero General Public License
+#   along with this program.  If not, see <http://www.gnu.org/licenses/>.
