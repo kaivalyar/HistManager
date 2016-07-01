@@ -16,12 +16,12 @@ A tool to manage terminal history for Bash based Linux environments.
     * [Uninstallation](#uninstallation)
   * [Documentation](#documentation)
   * [Samples](#samples)
-      1. [Installation](#1-installation)
-      2. [Creating Environments](#2-creating-environments)
-      3. [Using HistManager](#3-using-histmanager)
-      4. [Renaming and Archiving Environments](#4-renaming-and-archiving-environments)
-      5. [Restoring Environments](#5-restoring-environments)
-      6. [Uninstallation](#6-uninstallation)
+    * [Installation](#1-installation)
+    * [Creating Environments](#2-creating-environments)
+    * [Using HistManager](#3-using-histmanager)
+    * [Renaming and Archiving Environments](#4-renaming-and-archiving-environments)
+    * [Restoring Environments](#5-restoring-environments)
+    * [Uninstallation](#6-uninstallation)
   * [Contact](#contact)
   * [License](#license)
     * [Author's Note](#authors-note)
@@ -92,9 +92,22 @@ The uninstallation module of this project is also a work in progress. For now, f
 This project is still not documented completely. Please use the source files for now.
 
 ## Samples
+The following samples demonstrate HistManager.
+  1. Installation
+        Install HistManager, after moving [relevant files](#installation) into the home directory
+  2. Creating Environments
+        Create two environments, and initialise an environment for the terminal session
+  3. Using HistManager
+        Switch to a different environment for a different terminal session
+  4. Renaming and Archiving Environments
+        Rename one of the two environments and archive the other, and then initialise the renamed environment for the terminal session
+  5. Restoring Environments
+        Restore the archived environment, and then initialise it for the terminal session
+  6. Uninstallation
+        Initialise 'Master', and then uninstall HistManager, after moving the [relevant file](#uninstallation) into the home directory
 
 #### 1. Installation
-Installing HistManager, after moving the relevant files into home directory:
+Installing HistManager, after moving the [relevant files](#installation) into home directory:
 ```
 ... ~ $ sh install-histmanager.sh 
 
@@ -121,8 +134,8 @@ Please restart the Terminal to start using HistManager.
 
 #### 2. Creating Environments
 Creating two environments:
-1. SudoInstalls - for doing all installation related work, will contain multiple `sudo apt-get` commands
-2. CS101 - for doing all work related to college course CS101, will probably be a software project
+  1. SudoInstalls - for doing all installation related work, will contain multiple `sudo apt-get` commands
+  2. CS101 - for doing all work related to college course CS101, will probably be a software project
 And then initialising the terminal session as a 'CS101' environment
 ```
 Welcome.
@@ -192,7 +205,7 @@ Initialized empty Git repository in /home/user/CS101/.git/
 ```
 
 #### 3. Using HistManager
-Switching to the 'Master' in the next terminal session
+Switching to 'Master' for this terminal session
 ```
 Welcome.
 HistManagerBETA 1.0 running.
@@ -288,7 +301,7 @@ CompSci101 history sucessfully imported.
 ```
 
 #### 5. Restoring Environments
-Restoring the archived SudoInstalls environment, setting it as the environment for the terminal session
+Restoring the archived 'SudoInstalls' environment, setting it as the environment for this terminal session
 ```
 Welcome.
 HistManagerBETA 1.0 running.
@@ -344,37 +357,10 @@ apt-get is a simple command line interface for downloading and
 installing packages. The most frequently used commands are update
 and install.
 
-Commands:
-   update - Retrieve new lists of packages
-   upgrade - Perform an upgrade
-   install - Install new packages (pkg is libc6 not libc6.deb)
-   remove - Remove packages
-   autoremove - Remove automatically all unused packages
-   purge - Remove packages and config files
-   source - Download source archives
-   build-dep - Configure build-dependencies for source packages
-   dist-upgrade - Distribution upgrade, see apt-get(8)
-   dselect-upgrade - Follow dselect selections
-   clean - Erase downloaded archive files
-   autoclean - Erase old downloaded archive files
-   check - Verify that there are no broken dependencies
-   changelog - Download and display the changelog for the given package
-   download - Download the binary package into the current directory
+.
+.
+.
 
-Options:
-  -h  This help text.
-  -q  Loggable output - no progress indicator
-  -qq No output except for errors
-  -d  Download only - do NOT install or unpack archives
-  -s  No-act. Perform ordering simulation
-  -y  Assume Yes to all queries and do not prompt
-  -f  Attempt to correct a system with broken dependencies in place
-  -m  Attempt to continue if archives are unlocatable
-  -u  Show a list of upgraded packages as well
-  -b  Build the source package after fetching it
-  -V  Show verbose version numbers
-  -c=? Read this configuration file
-  -o=? Set an arbitrary configuration option, eg -o dir::cache=/tmp
 See the apt-get(8), sources.list(5) and apt.conf(5) manual
 pages for more information and options.
                        This APT has Super Cow Powers.
@@ -382,7 +368,7 @@ pages for more information and options.
 ```
 
 #### 6. Uninstallation
-Uninstalling HistManager, after moving the relevant file into the home directory
+Uninstalling HistManager, after moving the [relevant file](#uninstallation) into the home directory
 ```
 Welcome.
 HistManagerBETA 1.0 running.
