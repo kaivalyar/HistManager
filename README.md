@@ -1,7 +1,7 @@
 #HistManager
-=================================
-
 A tool to manage terminal history for Bash based Linux environments.
+
+=================================
 
 ## Table of Contents
   * [Synopsis](#synopsis)
@@ -16,12 +16,12 @@ A tool to manage terminal history for Bash based Linux environments.
     * [Uninstallation](#uninstallation)
   * [Documentation](#documentation)
   * [Samples](#samples)
-    * [Installation](#1-installation)
+    * [Installing](#1-installing)
     * [Creating Environments](#2-creating-environments)
     * [Using HistManager](#3-using-histmanager)
     * [Renaming and Archiving Environments](#4-renaming-and-archiving-environments)
     * [Restoring Environments](#5-restoring-environments)
-    * [Uninstallation](#6-uninstallation)
+    * [Uninstalling](#6-uninstalling)
   * [Contact](#contact)
   * [License](#license)
     * [Author's Note](#authors-note)
@@ -93,20 +93,26 @@ This project is still not documented completely. Please use the source files for
 
 ## Samples
 The following samples demonstrate HistManager.
-  1. Installation
-        Install HistManager, after moving [relevant files](#installation) into the home directory
-  2. Creating Environments
-        Create two environments, and initialise an environment for the terminal session
-  3. Using HistManager
-        Switch to a different environment for a different terminal session
-  4. Renaming and Archiving Environments
-        Rename one of the two environments and archive the other, and then initialise the renamed environment for the terminal session
-  5. Restoring Environments
-        Restore the archived environment, and then initialise it for the terminal session
-  6. Uninstallation
-        Initialise 'Master', and then uninstall HistManager, after moving the [relevant file](#uninstallation) into the home directory
 
-#### 1. Installation
+  1. **Installing**:
+        Installing HistManager, after moving [relevant files](#installation) into the home directory.
+
+  2. **Creating Environments**:
+        Creating two environments, and initialising an environment for the terminal session.
+
+  3. **Using HistManager**:
+        Switching to a different environment for a different terminal session.
+
+  4. **Renaming and Archiving Environments**:
+        Renaming one of the two environments, archiving the other, and finally initialising the renamed environment for the terminal session.
+
+  5. **Restoring Environments**:
+        Restoring the archived environment, and then initialising it for the terminal session.
+
+  6. **Uninstalling**:
+        Initialising 'Master', and then uninstalling HistManager, after moving the [relevant file](#uninstallation) into the home directory.
+
+#### 1. Installing
 Installing HistManager, after moving the [relevant files](#installation) into home directory:
 ```
 ... ~ $ sh install-histmanager.sh 
@@ -367,7 +373,7 @@ pages for more information and options.
 ... ~ $ 
 ```
 
-#### 6. Uninstallation
+#### 6. Uninstalling
 Uninstalling HistManager, after moving the [relevant file](#uninstallation) into the home directory
 ```
 Welcome.
