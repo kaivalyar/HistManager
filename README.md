@@ -1,28 +1,28 @@
-HistManager
+#HistManager
 =================================
 
 A tool to manage terminal history for Bash based Linux environments.
 
-# Synopsis
+## Synopsis
 
-## Motivation
+### Motivation
 The default history management system of the terminal can sometimes seem clunky and unhelpful. While the terminal is versatile and facilitates a wide variety of tasks, the terminal command history can only be accessed as a single obscenely-long list. When using the terminal, this often makes it difficult to scroll to the desired commands, especially for novice users.
 
-## Objective
+### Objective
 This project aims to simplify that task, by splitting each use of the terminal into a _session_, with an _environment_. The user can select the environment of the terminal upon startup, and thus obtain clutter free access to all the commands executed in that particular environment, with other environments' history not in the picture. For example, when working on a Java Applet, the user may choose to use a Java environment, which would provide only the Java environments' terminal history - and not show any Python commands that were executed from the Python environment.
 
-## Strategy
+### Strategy
 The history of the bash terminal, by default, is stored in the ~/`.bash_history` file. HistManager works by constantly editing this file - replacing it with a different file (based on the environment history the user wants to import). This way, the system still uses the default, `.bash_history` file to both add and retrieve commands, but the file iself is managed by HistManager - thus changing the history on demand. Additions to environment histories also occur this way - the system edits the `.bash_history` file, and the edits are copied into the relevant environment history file by HistManager.
 
 Apart from all the user generated environments, there is another, 'Master' environment - which can't be edited by the user. This environment is special, as it contains all the history, from all the environments. Thus, selecting the Master environment for a Terminal session has the same effect as continuing with the default `.bash_history` file.
 
-## Pizzazz
+### Pizzazz
 Apart from just replacing the `.bash_history` file appropriately, HistManager provides some more features.
 
-### The HistManager Settings Menu
+#### The HistManager Settings Menu
 Enabling the user to create new environments is the only necessary feature required for HistManager to function. However, HistManager goes beyond this and allows renaming, merging and archiving existing environments. These features can be accessed from the `HistManager Settings` menu.
 
-### Quirks and Hacks
+#### Quirks and Hacks
 Here is a list of other quirks in the program. These aren't listed anywhere else, as they are not essential to the core functionality offered by the code.
 
 * Environment Names
@@ -41,9 +41,9 @@ Here is a list of other quirks in the program. These aren't listed anywhere else
 * Merging Environments
   * When two environments are merged, their individual histories are first archived, and can thus be retrieved.
 
-# Set Up
+## Set Up
 
-## Installation
+### Installation
 The installation module of this project is a work in progress. For now, follow the following steps to install:
  1. Download and move these files into your home directory:
     * `install-histmanager.sh` (the installation Shell Script)
@@ -56,22 +56,22 @@ The installation module of this project is a work in progress. For now, follow t
  4. Move the `uninstall-histmanager.sh` file created in your home directory to an appropriate location. **Do not delete this file**.
  5. Restart the Terminal to check installation and begin using HistManager.
 
-##Uninstallation
+###Uninstallation
 The uninstallation module of this project is also a work in progress. For now, follow the following steps to uninstall:
  1. Move the `uninstall-histmanager.sh` file created at installation time back into your home directory.
  2. Open the Terminal, and select the _Master_ environment, if possible.
  3. Type `sh uninstall-histmanager.sh`
  4. Restart the Terminal to check if uninstallation was successful.
 
-# Documentation
+## Documentation
 
 This project is still not documented completely. Please use the source files for now.
 
-# Samples
+## Samples
 
-## Installation
+#### Installation
 Installing HistManager, after moving the relevant files into home directory:
-```sh
+```
 ... ~ $ sh install-histmanager.sh 
 
 Welcome to HistManagerBETA Installer
@@ -95,12 +95,12 @@ Please restart the Terminal to start using HistManager.
 ... ~ $ 
 ```
 
-## First Run - Creating Some Environments
+#### First Run - Creating Some Environments
 Creating two environments:
 1. SudoInstalls - for doing all installation related work, will contain multiple `sudo apt-get` commands
 2. CS101 - for doing all work related to college course CS101, will probably be a software project
 And then initialising the terminal session as a 'CS101' environment
-```sh
+```
 Welcome.
 HistManagerBETA 1.0 running.
 ------------------------------------
@@ -167,9 +167,9 @@ Initialized empty Git repository in /home/user/CS101/.git/
  ~/CS101 $ 
 ```
 
-## Second Run - Using HistManager
+#### Second Run - Using HistManager
 Switching to the 'Master' in the next terminal session
-```sh
+```
 Welcome.
 HistManagerBETA 1.0 running.
 ------------------------------------
@@ -193,9 +193,9 @@ Master history sucessfully imported.
 /home/user
 ```
 
-## Third Run - Renaming and Archiving Environments
+#### Third Run - Renaming and Archiving Environments
 Renaming 'CS101' to 'CompSci101', archiving 'SudoInstalls', and then initialising the terminal session as a 'CompSci101' session
-```sh
+```
 Welcome.
 HistManagerBETA 1.0 running.
 ------------------------------------
@@ -263,9 +263,9 @@ CompSci101 history sucessfully imported.
  ~/CompSci101 $ 
 ```
 
-## Fourth Run - Restoring Environments
+#### Fourth Run - Restoring Environments
 Restoring the archived SudoInstalls environment, setting it as the environment for the terminal session
-```sh
+```
 Welcome.
 HistManagerBETA 1.0 running.
 ------------------------------------
@@ -357,9 +357,9 @@ pages for more information and options.
  ~ $ 
 ```
 
-## Uninstallation
+#### Uninstallation
 Uninstalling HistManager, after moving the relevant file into the home directory
-```sh
+```
 Welcome.
 HistManagerBETA 1.0 running.
 ------------------------------------
@@ -396,19 +396,18 @@ Please restart the Terminal.
  ~ $ 
 ```
 
-
-# Contact and More
+## Contact and More
 
 HistManagerBETA was released on July 1, 2016. If you have any questions, wish to report bugs, or to contribute to this project, simply write to [histmanager@gmail.com](mailto:histmanager@gmail.com) (yes, emails shall be responded to promptly).
 
-# License
+## License
 
-## Authors Note
+### Authors Note
 This is an Open-Source project. Contributions are welcome (I could use the help!). You are free to use this project (modified or otherwise) whichever way you please - as long as you continue to keep it free.
 
-## More Info (aka Law Speak)
+### Complete License Information
 This project is released under the [GNU-AGPL](https://www.gnu.org/licenses/agpl-3.0.txt) license.
 
 This means that your permissions are conditioned on making available complete source code of licensed works and modifications, which include larger works using a licensed work, under the same license. Copyright and license notices must be preserved. Contributors provide an express grant of patent rights. When a modified version is used to provide a service over a network, the complete source code of the modified version must be made available.
 
-Please read the LICENSE.md(https://raw.githubusercontent.com/kaivalyar/HistManager/master/LICENSE.md) file or visit [www.gnu.org/licenses/agpl-3.0.txt](https://www.gnu.org/licenses/agpl-3.0.txt) for even**(!)** more information.
+Please read the [LICENSE.md](https://raw.githubusercontent.com/kaivalyar/HistManager/master/LICENSE.md) file or visit [gnu.org/licenses/agpl-3.0.txt](https://www.gnu.org/licenses/agpl-3.0.txt) for more information.
