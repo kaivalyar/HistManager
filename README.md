@@ -9,12 +9,12 @@ A tool to manage terminal history for Bash based Linux environments.
 The default history management system of the terminal can sometimes seem clunky and unhelpful. While the terminal is versatile and facilitates a wide variety of tasks, the terminal command history can only be accessed as a single obscenely-long list. When using the terminal, this often makes it difficult to scroll to the desired commands, especially for novice users.
 
 ### Objective
-This project aims to simplify that task, by splitting each use of the terminal into a _session_, with an _environment_. The user can select the environment of the terminal upon startup, and thus obtain clutter free access to all the commands executed in that particular environment, with other environments' history not in the picture. For example, when working on a Java Applet, the user may choose to use a Java environment, which would provide only the Java environments' terminal history - and not show any Python commands that were executed from the Python environment.
+This project aims to simplify terminal history management, by splitting each use of the terminal into a _session_, with an _environment_. The user can select the environment of the terminal upon startup, and thus obtain clutter free access to all the commands executed in that particular environment, with other environments' history not in the picture. For example, when working on a Java Applet, the user may choose to use a Java environment, which would provide only the Java environments' terminal history - and not show any Python commands that were executed from the Python environment.
 
 ### Strategy
-The history of the bash terminal, by default, is stored in the ~/`.bash_history` file. HistManager works by constantly editing this file - replacing it with a different file (based on the environment history the user wants to import). This way, the system still uses the default, `.bash_history` file to both add and retrieve commands, but the file iself is managed by HistManager - thus changing the history on demand. Additions to environment histories also occur this way - the system edits the `.bash_history` file, and the edits are copied into the relevant environment history file by HistManager.
+The history of the bash terminal, by default, is stored in the `~/.bash_history` file. HistManager works by constantly editing this file - replacing it with a different file (based on the environment history the user wants to import). This way, the system still uses the default, `.bash_history` file to both add and retrieve commands, but the file iself is managed by HistManager - thus changing the history on demand. Additions to environment histories also occur this way - the system edits the `.bash_history` file, and the edits are copied into the relevant environment history file by HistManager.
 
-Apart from all the user generated environments, there is another, 'Master' environment - which can't be edited by the user. This environment is special, as it contains all the history, from all the environments. Thus, selecting the Master environment for a Terminal session has the same effect as continuing with the default `.bash_history` file.
+Apart from all the user generated environments, there is another, 'Master' environment - which can't be edited by the user. This environment is special, as it contains all the history, from all the environments. Thus, selecting the Master environment for a terminal session has the same effect as continuing with the default `.bash_history` file.
 
 ### Pizzazz
 Apart from just replacing the `.bash_history` file appropriately, HistManager provides some more features.
@@ -26,17 +26,17 @@ Enabling the user to create new environments is the only necessary feature requi
 Here is a list of other quirks in the program. These aren't listed anywhere else, as they are not essential to the core functionality offered by the code.
 
 * Environment Names
-  * All environment names are case insensitive. Thus, _jAvA_ and _java_ are identical to _Java_.
-  * Environment names can't contain special characters or whitespace, but the `+`, `-`, and `_` symbols are still allowed in environment names.
-  * An environment can't be named _Master_ or _HistManager-Settings_.
-  * Environment names cant contain the words _archive_, or _Error-Env_, or _Pre-Merge_.
+  * All environment names are case insensitive. Thus, _projectX_ and _projectx_ are identical to _ProjectX_.
+  * Environment names can't contain special characters or whitespace, but the '+', '-', and '_' symbols are still allowed in environment names.
+  * An environment can't be named '_Master_' or '_HistManager-Settings_'.
+  * Environment names cant contain the words '_archive_', '_error-env_', or '_pre-merge_'.
 * Menus
-  * The `(y/n)` menu is case insensitive; and considers `Y`, `y`, `Yes`, and `yes` to be identical; and `N`, `n`, `No`, and `no` to be identical.
+  * All `(y/n)` menus are case insensitive; and consider `Y`, `y`, `Yes`, and `yes` to be identical; and `N`, `n`, `No`, and `no` to be identical.
   * When choosing environments from a list, typing environment names functions the same as typing their serial numbers.
   * Pressing _Enter_ (or _Return_) when accessing any of the settings features, such as _rename_ or _merge_, returns to the _HistManager Settings_ menu.
   * Pressing _Enter_ (or _Return_) when accessing the _HistManager Settings_ menu returns to the _Environment Menu_ .
   * Pressing _Enter_ (or _Return_) at the _Environment Menu_ loads the environment from the previous session of the Terminal, if any.
-  * When at the _Environment Menu_, the decimal numbers `0.1` through `0.7` offer direct access to the first through the seventh options from the _HistManager Settings_ menu, respectively. All other 0.x decimals open up the _HistManager Settings_ menu.
+  * When at the _Environment Menu_, the decimal numbers _0.1_ through _0.7_ offer direct access to the first through the seventh options from the _HistManager Settings_ menu, respectively. All other _0.x_ decimals open up the _HistManager Settings_ menu.
   * When selecting a display mode for viewing environment history, negative menu options can be used too, to sort the output alphabetically, rather than chronologically.
 * Merging Environments
   * When two environments are merged, their individual histories are first archived, and can thus be retrieved.
@@ -69,7 +69,7 @@ This project is still not documented completely. Please use the source files for
 
 ## Samples
 
-#### Installation
+#### 1. Installation
 Installing HistManager, after moving the relevant files into home directory:
 ```
 ... ~ $ sh install-histmanager.sh 
@@ -95,7 +95,7 @@ Please restart the Terminal to start using HistManager.
 ... ~ $ 
 ```
 
-#### First Run - Creating Some Environments
+#### 2. Creating Some Environments
 Creating two environments:
 1. SudoInstalls - for doing all installation related work, will contain multiple `sudo apt-get` commands
 2. CS101 - for doing all work related to college course CS101, will probably be a software project
@@ -160,14 +160,14 @@ CS101 history sucessfully imported.
 
 ------------------------------------
 
- ~ $ mkdir CS101
- ~ $ cd CS101
- ~/CS101 $ git init
+... ~ $ mkdir CS101
+... ~ $ cd CS101
+... ~/CS101 $ git init
 Initialized empty Git repository in /home/user/CS101/.git/
- ~/CS101 $ 
+... ~/CS101 $ 
 ```
 
-#### Second Run - Using HistManager
+#### 3. Using HistManager
 Switching to the 'Master' in the next terminal session
 ```
 Welcome.
@@ -189,11 +189,11 @@ Master history sucessfully imported.
 
 ------------------------------------
 
- ~ $ pwd
+... ~ $ pwd
 /home/user
 ```
 
-#### Third Run - Renaming and Archiving Environments
+#### 4. Renaming and Archiving Environments
 Renaming 'CS101' to 'CompSci101', archiving 'SudoInstalls', and then initialising the terminal session as a 'CompSci101' session
 ```
 Welcome.
@@ -258,12 +258,12 @@ CompSci101 history sucessfully imported.
 
 ------------------------------------
 
- ~ $ mv ~/CS101/ ~/CompSci101
- ~ $ cd CompSci101/
- ~/CompSci101 $ 
+... ~ $ mv ~/CS101/ ~/CompSci101
+... ~ $ cd CompSci101/
+... ~/CompSci101 $ 
 ```
 
-#### Fourth Run - Restoring Environments
+#### 5. Restoring Environments
 Restoring the archived SudoInstalls environment, setting it as the environment for the terminal session
 ```
 Welcome.
@@ -309,7 +309,7 @@ SudoInstalls history sucessfully imported.
 
 ------------------------------------
 
- ~ $ sudo apt-get
+... ~ $ sudo apt-get
 [sudo] password for user: 
 apt 1.0.1ubuntu2 for amd64 compiled on May 18 2016 09:49:01
 Usage: apt-get [options] command
@@ -354,10 +354,10 @@ Options:
 See the apt-get(8), sources.list(5) and apt.conf(5) manual
 pages for more information and options.
                        This APT has Super Cow Powers.
- ~ $ 
+... ~ $ 
 ```
 
-#### Uninstallation
+#### 6. Uninstallation
 Uninstalling HistManager, after moving the relevant file into the home directory
 ```
 Welcome.
@@ -379,7 +379,7 @@ Master history sucessfully imported.
 
 ------------------------------------
 
- ~ $ sh uninstall-histmanager.sh 
+... ~ $ sh uninstall-histmanager.sh 
 
 Do you wish to uninstall HistManagerBETA?(y/n)       y
 
@@ -393,7 +393,7 @@ Deleting HistManagerBETA Data and Programs .... [Done]
 Successfully Uninstalled HistManagerBETA
 Please restart the Terminal.
 
- ~ $ 
+... ~ $ 
 ```
 
 ## Contact and More
@@ -403,7 +403,7 @@ HistManagerBETA was released on July 1, 2016. If you have any questions, wish to
 ## License
 
 ### Authors Note
-This is an Open-Source project. Contributions are welcome (I could use the help!). You are free to use this project (modified or otherwise) whichever way you please - as long as you continue to keep it free.
+This is an Open-Source project. Contributions are welcome (I could use the help)! You are free to use this project (modified or otherwise) whichever way you please - as long as you continue to keep it open and free.
 
 ### Complete License Information
 This project is released under the [GNU-AGPL](https://www.gnu.org/licenses/agpl-3.0.txt) license.
