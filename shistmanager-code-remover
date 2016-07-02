@@ -110,7 +110,7 @@ rm -rf ~/.khist/
 sleep 3
 echo ""
 echo "Successfully Uninstalled HistManagerBETA"
-if [ -f "~/HistErrorLogReport.khtxt" ]; then
+if [ -f ~/HistErrorLogReport.khtxt ]; then
     sleep 0.5
     echo "HistManager uninstaller has generated an ErrorLogReport in your home directory"
     sleep 0.5
