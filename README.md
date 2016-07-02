@@ -140,8 +140,9 @@ Please restart the Terminal to start using HistManager.
 
 #### 2. Creating Environments
 Creating two environments:
-  1. SudoInstalls - for doing all installation related work, will contain multiple `sudo apt-get` commands
-  2. CS101 - for doing all work related to college course CS101, will probably be a software project
+  1. SudoInstalls - for doing all installation related work (could contain multiple `sudo apt-get` commands), and
+  2. CS101 - for doing all work related to college course CS101 (could be a course related software project),
+
 And then initialising the terminal session as a 'CS101' environment
 ```
 Welcome.
