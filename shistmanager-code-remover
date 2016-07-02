@@ -67,6 +67,26 @@ mv ~/.khist/history/Master.khtxt ~/.bash_history
     sleep 0.5
 }
 
+# Moving Error Logs
+if [ $(wc -l < ~/.khist/errorlog.khtxt) -ge 2 ]; then
+    mv ~/.khist/errorlog.khtxt ~/HistErrorLogReport.khtxt
+    {
+        sleep 0.5
+        printf "%s" "Generating Error Logs from your past usage of HistManager"
+        sleep 0.5
+        printf "%s" " ."
+        sleep 0.5
+        printf "%s" "."
+        sleep 0.5
+        printf "%s" "."
+        sleep 0.5
+        printf "%s" ". "
+        sleep 0.5
+        echo "[Done]"
+        sleep 0.5
+    }
+fi
+
 # Clean Up
 mv ~/uninstall-histmanager.sh ~/.khist/uninstallfile_archived.sh
 rm -rf ~/.khist/
@@ -90,6 +110,15 @@ rm -rf ~/.khist/
 sleep 3
 echo ""
 echo "Successfully Uninstalled HistManagerBETA"
+if [ -f "~/HistErrorLogReport.khtxt" ]; then
+    sleep 0.5
+    echo "HistManager uninstaller has generated an ErrorLogReport in your home directory"
+    sleep 0.5
+    echo "Please email it to histmanager@gmail.com so we can improve further versions of HistManager."
+    # Should have an option to send mail directly, if mail, uuencode, mutt, metasend, or sendfile is installed.
+    # http://www.shelldorado.com/articles/mailattachments.html
+    # http://stackoverflow.com/questions/592620/check-if-a-program-exists-from-a-bash-script
+fi
 sleep 1
 echo "Please restart the Terminal."
 sleep 1
@@ -109,6 +138,6 @@ exit
 #   but WITHOUT ANY WARRANTY; without even the implied warranty of
 #   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 #   GNU Affero General Public License for more details.
-
+#
 #   You should have received a copy of the GNU Affero General Public License
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
