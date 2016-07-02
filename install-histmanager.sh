@@ -186,7 +186,7 @@ welmes="HistManagerBETA 1.0 running."
     echo "# You should have received a copy of the GNU Affero General Public License"
     echo "# along with this program.  If not, see <http://www.gnu.org/licenses/>."
 } > ~/.khist/histmanager.sh
-echo "sh ~/.khist/histmanager.sh" >> ~/.bashrc
+echo "sh ~/.khist/histmanager.sh # Added by HistManager" >> ~/.bashrc
 {
     sleep 0.5
     printf "%s" "Configuring Terminal Startup to use HistManagerBETA"
