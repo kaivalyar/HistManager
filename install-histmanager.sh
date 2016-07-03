@@ -41,32 +41,35 @@ sleep 1
 echo ""
 
 #Backup .bashrc, if it exists
-if [ -f "~/.bashrc" ]
+if [ -f ~/.bashrc ]
 then
     cp ~/.bashrc ~/bashrc_backup.txt
     {
         sleep 0.25
         printf "%s" "Creating backup of .bashrc file"
-        sleep 0.2
+        # as on $(date +%y-%m-%d)" #Shortened display
+        sleep 0.4
         printf "%s" " ."
-        sleep 0.2
+        sleep 0.45
         printf "%s" "."
-        sleep 0.2
+        sleep 0.45
         printf "%s" "."
-        sleep 0.25
+        sleep 0.5
         printf "%s" ". "
-        sleep 0.25
+        sleep 0.5
         echo "[Done]"
-        sleep 1
+        sleep 0.75
     } # Fancy Display!
+else
+    sleep 0.1
 fi
 
 # Backup Existing History, if any
-if [ -f "~/.bash_history" ] # create .bash_history file if it doesn't exist (needed for import into Master.khtxt)
+if [ -f ~/.bash_history ]
 then
     sleep 0.1
 else
-    touch ~/.bash_history
+    touch ~/.bash_history # create .bash_history file if it doesn't exist (needed for import into Master.khtxt)
 fi
 cp ~/.bash_history ~/BashHistoryBackup_20$(date +%y-%m-%d_%H':'%M':'%S).txt
 {
