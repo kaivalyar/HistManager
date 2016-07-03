@@ -885,9 +885,8 @@ def main():
         print('')
         traceback.print_exc()
 
-main()
-
-
+if __name__ == '__main__':
+    main()
 
 
 #   HistManager - Effectively Manage Terminal History

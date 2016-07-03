@@ -13,8 +13,8 @@ def clear_rc():
     lines = f.readlines()
     f.close()
     try:
-        lines.remove('sh ~/.khist/histmanager.sh\n')
-    except ValueError:
+        lines.remove('sh ~/.khist/histmanager.sh # Added by HistManager\n')
+    except Exception:
         pass
     f = open(os.path.expanduser("~/.bashrc"), 'w')
     for l in lines:
@@ -107,7 +107,8 @@ def uninstall():
 def main():
     uninstall()
 
-main()
+if __name__ == '__main__':
+    main()
 
 #   HistManager - Effectively Manage Terminal History
 #   Copyright (C) 2016  Kaivalya Rawal (histmanager@gmail.com)
