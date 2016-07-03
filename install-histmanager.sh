@@ -47,7 +47,6 @@ then
     {
         sleep 0.25
         printf "%s" "Creating backup of .bashrc file"
-        # as on $(date +%y-%m-%d)" #Shortened display
         sleep 0.2
         printf "%s" " ."
         sleep 0.2
