@@ -1,7 +1,7 @@
 [TO-DO]
 01. rename: khist=hist, khtxt=htxt, ~/=~/HISTMANAGER (for holding files pre installation)
 02. Apply Name Convention : https://google.github.io/styleguide/pyguide.html?showone=Naming#Naming
-03. modularise - consolidate repetitive `input error proofing code`, `display code`, `lines exceeding 80 characters`etc
+03. modularise - consolidate repetitive `input error proofing code`, `display code`, `lines exceeding 80 characters`, etc
 04. Document:
     4.1 ReDocument including reStructuredText markup
     4.2 Use sphinx to covert/generate and host python documentation
@@ -11,8 +11,8 @@
 06. Include version number and error contact, licence, push to Git, deploy over web (6)
 07. Installer should quit/uninstall if an error occurs during installation
 08. check for update at startup
-09. upon uninstall - upload errorlog (design webform to post files / design webform to post links (generated via my pastebin-sharer)) to project site.
-10. Distribute via project site
+09. upon uninstall - offer to auto email errorlog to histmanager@gmail.com // upload errorlog (design webform to post files / design webform to post links (generated via a pastebin-sharer, shortened)) to project site.
+10. Distribute via project site / ppa / proper .deb build binary
 11. support multi-tab / multiple terminals
 12. export to Ubuntu (dash), OSx
 
@@ -29,18 +29,3 @@ reorder settings menu
 deleted "Can't retreive prior environment settings to use as default" message
 installer should ensure python3 is installed and act accordingly
 Dump stacktrace to debuglog.khtxt, print appropriate message to screen
-
-[QUIRKS AND HACKS]
-Instead of choosing environment by index, name can by typed
-All environment names are case-insensitive
-Pressing enter at settings submenus takes you back to settings (eg in 0.2 -> oname or nname being '' return to settings)
-Pressing enter at settings menu return to environment menu
-Pressing enter at environment menu loads previous env (if any)
-+-_ are allowed in environment names
-history is archived pre-merge
-typing decimals 0.1 through 0.6 leads straight to settings submenus, other 0.x decimals lead to main settings menu
-(y/n) menus accept (Y/N), (yes/no) too
-negative values at viewhist submenu cause alphabetically sorted output
-
-[STRATEGY]
-The history of the bash terminal, by default, is stored in the ~/.bash_history file. HistManager works by constantly editing this file - replacing it with a different file (based on the environment history the user wants to import). This way, the system still uses the default, .bash_history file to both add and retrieve commands, but the file iself is replaced by HistManager - thus changing the history entirely. Additions to environment histories also occur this way - the system edits the .bash_history file, and the edits are copied into the relevant environment history file. Apart from all the user gernerated environments, there is another, 'Master' environment - which can't be merged, renamed, or archived. This environment is special, as it contains all the history, from all the environments. Thus, selecting the Master environment has the same effect as continuing with the default history management.
