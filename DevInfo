@@ -1,4 +1,5 @@
 [TO-DO]
+00. add jargon/terms section to readme
 01. rename: khist=hist, khtxt=htxt, ~/=~/HISTMANAGER (for holding files pre installation)
 02. Apply Name Convention : https://google.github.io/styleguide/pyguide.html?showone=Naming#Naming
 03. modularise - consolidate repetitive `input error proofing code`, `display code`, `lines exceeding 80 characters`, etc
