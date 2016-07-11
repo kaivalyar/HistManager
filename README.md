@@ -8,6 +8,7 @@ A tool to manage terminal history for Bash based Linux environments.
     * [Motivation](#motivation)
     * [Objective](#objective)
     * [Strategy](#strategy)
+    * [Lingo](#lingo)
     * [Pizzazz](#pizzazz)
       * [The Settings Menu](#the-settings-menu)
       * [Quirks and Hacks](#quirks-and-hacks)
@@ -33,12 +34,25 @@ A tool to manage terminal history for Bash based Linux environments.
 The default history management system of the terminal can sometimes seem clunky and unhelpful. While the terminal is versatile and facilitates a wide variety of tasks, the terminal command history can only be accessed as a single obscenely-long list. When using the terminal, this often makes it difficult to scroll to the desired commands, especially for novice users.
 
 ### Objective
-This project aims to simplify terminal history management, by splitting each use of the terminal into a _session_, with an _environment_. The user can select the environment of the terminal upon startup, and thus obtain clutter free access to all the commands executed in that particular environment, with other environments' history not in the picture. For example, when working on a Java Applet, the user may choose to use a Java environment, which would provide only the Java environments' terminal history - and not show any Python commands that were executed from the Python environment.
+This project aims to simplify terminal history management, by splitting each use of the terminal into a _session_, with an _environment_. The user can select the environment of the terminal upon startup, and thus obtain clutter free access to all the commands executed in that particular environment, with other environments' history not in the picture. For example, when working on a Java Applet, the user may choose to use a Java environment, which would provide only the Java environments' terminal history - and not show any Python commands that were executed from the Python environment. The current version is intended to work only for a single instance of the _Terminal_ application running at a time - and not for multiple tabs/windows. It is also not meant for the main linux terminal (`Ctrl` + `Alt` + `F1`-`F7`)
 
 ### Strategy
 The history of the bash terminal, by default, is stored in the `~/.bash_history` file. HistManager works by constantly editing this file - replacing it with a different file (based on the environment history the user wants to import). This way, the system still uses the default, `.bash_history` file to both add and retrieve commands, but the file iself is managed by HistManager - thus changing the history on demand. Additions to environment histories also occur this way - the system edits the `.bash_history` file, and the edits are copied into the relevant environment history file by HistManager.
 
 Apart from all the user generated environments, there is another, 'Master' environment - which can't be edited by the user. This environment is special, as it contains all the history, from all the environments. Thus, selecting the Master environment for a terminal session has the same effect as continuing with the default `.bash_history` file.
+
+### Lingo
+
+* Environments: Different terminal _environments_ differ in the history they possess, and prevent other environments' commands from showing up when accessing history (either via the `history` command, or via the arrow keys).
+  * Archived Environments: Environments that have been archived by the user, and are not to be displayed in the Environment Menu anymore.
+  * Error Generated Environments: Environments that contain the history of terminal sessions who's environments couldn't be initialised correctly.
+  * Pre Merge Environments: Archived environments containing copies of the history of two environments before they were merged.
+  * The Master Environment: The single environment that contains all the history, from all environments.
+* Sessions: Each time the terminal is opened, a _session_ is said to be started. HistManager currently can't handle multiple sessions running simultaneously.
+* User Menus
+  * Environment Menu: The main menu displayed upon terminal startup.
+  * HistManager-Settings Menu: The menu display containing options to create new environments, archive environments, rename environments, etc.
+  * Settings Submenus: The menus displayed for each action executed via the Settings menu, like those for renaming or archiving environments.
 
 ### Pizzazz
 Apart from just replacing the `.bash_history` file appropriately, HistManager provides some more features.
@@ -94,22 +108,22 @@ This project is still not documented completely. Please use the source files for
 ## Samples
 The following samples demonstrate HistManager.
 
-  1. **Installing**:
+  1. [**Installing**](#1-installing):
         Installing HistManager, after moving [relevant files](#installation) into the home directory.
 
-  2. **Creating Environments**:
+  2. [**Creating Environments**](#2-creating-environments):
         Creating two environments, and initialising an environment for the terminal session.
 
-  3. **Using HistManager**:
+  3. [**Using HistManager**](#3-using-histmanager):
         Switching to a different environment for a different terminal session.
 
-  4. **Renaming and Archiving Environments**:
+  4. [**Renaming and Archiving Environments**](#4-renaming-and-archiving-environments):
         Renaming one of the two environments, archiving the other, and finally initialising the renamed environment for the terminal session.
 
-  5. **Restoring Environments**:
+  5. [**Restoring Environments**](#5-restoring-environments):
         Restoring the archived environment, and then initialising it for the terminal session.
 
-  6. **Uninstalling**:
+  6. [**Uninstalling**](#6-uninstalling):
         Initialising 'Master', and then uninstalling HistManager, after moving the [relevant file](#uninstallation) into the home directory.
 
 #### 1. Installing
