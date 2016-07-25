@@ -1,12 +1,13 @@
 [TO-DO]
 01. rename: khist=hist, khtxt=htxt, ~/=~/HISTMANAGER (for holding files pre installation)
 02. Apply Name Convention : https://google.github.io/styleguide/pyguide.html?showone=Naming#Naming
-03. modularise - consolidate repetitive `input error proofing code`, `display code`, `lines exceeding 80 characters`, etc
+03. rewrite 0.1 - 0.7 histmanager submenus to use python decorator syntax - seperate io/error proofing from actual actions - streamline sysenv handling
 04. Document:
     4.1 ReDocument including reStructuredText markup
     4.2 Use sphinx to covert/generate and host python documentation
     4.3 Run pylint over entire python code
     4.4 move all shell documentation to the usage() function
+    4.5 rtfd.io
 05. Refactor as package/module, make importable : https://google.github.io/styleguide/pyguide.html?showone=Main#Main
 06. Include version number and error contact, licence, push to Git, deploy over web (6)
 07. Installer should quit/uninstall if an error occurs during installation
@@ -15,6 +16,7 @@
 10. Distribute via project site / ppa / proper .deb build binary
 11. support multi-tab / multiple terminals
 12. export to Ubuntu (dash), OSx
+13. create a .travis.yml file, allow automated testing
 
 [SOLVED]
 remove slow printing welmes - interruption can be fatal ####welmes should be command prompt input to python, and printed via python

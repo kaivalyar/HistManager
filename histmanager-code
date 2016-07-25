@@ -6,18 +6,37 @@ import re
 import time
 import traceback
 from shutil import copyfile
+import readline
 
 prevenv = None # set by the export() function, accessed by the set_env function()
-dbh = os.path.expanduser('~/.bash_history') # default bach history
+dbh = os.path.expanduser('~/.bash_history') # default bash history
 fp = os.path.expanduser('~/.khist/') # path to project folder
+allowed_input_options = [] # to be used for tab autocompletion
+ignore_input_case = False # to be used for tab autocompletion
+style_codes = None
 
-def write_dic (dictionary, filepath):
+def read_file(filepath):
+    """returns a list containing all the lines of a file"""
+    f = open(filepath, 'r')
+    result = f.readlines()
+    f.close()
+    return result
+
+def create_file(filepath):
+    """[single line wrapper] creates (and) returns a file"""
+    return open(filepath, 'w')
+
+def write_file(filepath, s):
+    """writes provided string to provided file"""
+    f = create_file(filepath)
+    f.write(s)
+    f.close()
+
+def write_dic (filepath, dictionary):
     """writes a dictionary to a file"""
     f = open(filepath, 'w')
     json.dump(dictionary, f)
     f.close()
-
-#json.dump(d, open("text.txt",'w'))
 
 def read_dic (filepath):
     """reads and returns a dictionary from a file"""
@@ -25,120 +44,324 @@ def read_dic (filepath):
     with open(filepath) as f:
         r = json.load(f)
     return r
-#d2 = json.load(open("text.txt"))
 
 def lines(env):
     """returns the number of lines in the history of an unarchived environment - by reading its history file"""
-    f = open(fp + "history/" + env + ".khtxt", 'r')
-    l = f.readlines()
-    f.close()
-    return len(l)
+    return len(read_file(fp + 'history/' + env + '.khtxt'))
 
-#menu is the read json-read dictionary
+def set_input_autocomplete_options(aio, iic):
+    """
+    sets the various words to be utilised for tab completion, and ignore case settings for matching input to valid words
+
+    (str list) aio: a list input words to be autocompleted - contains each word that will comprise of one possible tab completion option
+    (bool) iic: whether or not to ignore input case when matching user input to tab completion words
+    """
+    global allowed_input_options
+    global ignore_input_case
+    if ('' in aio):
+        aio.remove('')
+    allowed_input_options = [o for o in aio if (type(parse(o)) == type(''))]# sorted(aio)# unnecessary sort?
+    ignore_input_case = iic
+
+def clear_input_autocomplete_options():
+    """resets tab autocomplete words"""
+    set_input_autocomplete_options([], False)
+
+def autocomplete_input(text, state):# disable/tweak double tab display of all possible options?
+    """mandatory completer function to enable tab completion - set using the `readline.set_completer(autocomplete_input)` statement"""
+    #return [i for i in allowed_input_options if i.lower().startswith(text.lower())][state] #concise version
+    try:
+        if (ignore_input_case):
+            options = [cmnd for cmnd in allowed_input_options if cmnd.lower().startswith(text.lower())]
+        else:
+            options = [cmnd for cmnd in allowed_input_options if cmnd.startswith(text)]
+        if state < len(options):#redundant
+            return options[state]
+        else:
+            return None#redundant
+    except Exception as e:
+        dumperror(e, False)
+    except BaseException as e:
+        dumperror(e, True)
+    except:
+        pass
+
+def rinput(prompt, autocompleteOptions, ignoreCase=True):
+    """
+    [helper function] 'raw input', get user input following project guidelines - tab autocompletion, prompt format, input format, etc
+
+    (str) prompt: the input prompt for the user
+    (str list) autocompleteOptions: set of words to be used for tab autocompletion when fetching this input
+    (bool) ignoreCase(=True): whether or not to ignore case when matching tab autocompletion words
+    """
+    set_input_autocomplete_options(autocompleteOptions, ignoreCase)
+    rin = input(prettify("{ENDFORMAT}$${PFORMAT}"+prompt+"${INFORMAT}"))
+    pprint("{ENDFORMAT}$", endc='')
+    clear_input_autocomplete_options()
+    return rin
+
+## get input from the user
+# prompt - the prompt to be displayed for taking user input
+# acceptableOptions - the list of strings containing acceptable input option. [] indicates all options acceptable ('001' input is acceptable if acceptableOptions=['1'])
+# repeatOptions - the list of strings that, if entered, call for a repeated prompt
+# repeatPropmt - the prompt to use when prompting for input again
+# eReturn - the value to return if the input is invalid. Default is None. Boolean False indicates that error should never occur, and function should keep forcibly prompting until acceptable input is obtained
+# ignoreCase - boolean indicating whether to ignore case when parsing acceptableOptions and repeatOptions
+## Duck Type / Default Values : no user prompt, all input is acceptable, prompt is never repeated, repeat prompt is same as prompt, None is returned for invalid input
+def get_input(prompt='', acceptableOptions=[], repeatOptions=[], repeatPrompt=None, eReturn=None, ignoreCase=True):
+    """
+    gets input from the user, passing it through basic error-proofing conditions
+
+    (str) prompt(=''): the input prompt for the user
+    (str list) acceptableOptions(=[]): set of words that comprise the acceptable input from the user, default configuration allows all options
+    (str list) repeatOptions(=[]): set of words that indicate erroneous input and a subsequent retry for user's input
+    (str) repeatPrompt(=prompt): the subsequent input prompt for the user
+    eReturn: the value to be returned if user's input is beyond both acceptableOptions and repeatOptions. if set to `False`, get_input enters repeated prompting mode - never returning a value until the user enters a valid, 'acceptableOption'
+    (bool) ignoreCase(=True): whether or not to ignore case when matching acceptableOptions and repeatOptions
+    """
+    # Quirk - if all options are acceptable, ie acceptable options = [], then repeat options are not checked for.
+    if(repeatPrompt == None):
+        repeatPrompt = prompt
+    rin = rinput(prompt, acceptableOptions + repeatOptions, ignoreCase)
+    if (len(acceptableOptions) != 0):# ie all options aint acceptable
+        if (is_inside(rin, acceptableOptions, ignoreCase) == None):# ie the input is unacceptable
+            if (type(eReturn) == type(True) and eReturn == False):# dont return, despite error - force input
+                return get_input(repeatPrompt, acceptableOptions, repeatOptions, repeatPrompt, False, ignoreCase)
+            else:
+                if(is_inside(rin, repeatOptions, ignoreCase) != None):# error handling mandates repeated try for input
+                    return get_input(repeatPrompt, acceptableOptions, repeatOptions, repeatPrompt, eReturn, ignoreCase)
+                else:# error handling - return an error condition
+                    return eReturn # (probably returns None)
+        else:
+            return (is_inside(rin, acceptableOptions, ignoreCase))
+    return rin
+
+# runs the obtained input through all the validation functions - returning the index of the particular validation function failed (int), if failed. OR returns the (string) input if successful
+def smart_input(prompt='', validate=[], convertMap=None, autocompleteOptions=[], ignoreCase=True):
+    """
+    gets input from the user, passing it through variable error proofing conditions - returns either the index of the validation function failed (int), or the valid user input (str)
+
+    (str) prompt(=''): the input prompt for the user
+    (function list) validate: functions that should validate the input text
+    (dict) convertMap(=None): for menu inputs, a map of the form {'1':'option1', '2':'option2' ... }, representing index:value pairs to convert obtained (index) input to a value before validation, returning
+    (str list) autocompleteOptions(=[]): set of words to be used for tab autocompletion when fetching input
+    (bool) ignoreCase(=True): whether or not this input is case insensitive
+    """
+    rin = rinput(prompt, autocompleteOptions, ignoreCase)
+    if (convertMap != None):
+        ain = is_inside(str(parse(rin)), convertMap.keys())
+        if (ain != None):
+            rin = convertMap[ain]
+    i = 0
+    for f in validate:
+        if (not f(rin)):# if invalid
+            return i
+        i = i + 1
+    return rin# rin passed all validity tests
+
+def get_yn(prompt, sInput='', sReturn=None):# should make sInput functionality optional
+    """
+    gets yes/no input from the user, and returns a corresponding boolean (or None, if input string is the same as the specified special input)
+
+    (str) prompt: the prompt for getting user input
+    (str) sInput(=''): the special input string - the case when None is to be returned instead of a boolean
+    sReturn(=None): the value to be returned if input corresponds to special input
+    """
+    rin = get_input(prompt+"", acceptableOptions=[sInput, 'y', 'yes', 'n', 'no'], eReturn=False)
+    if (rin == 'y' or rin == 'yes'):
+        return True
+    elif (rin == 'n' or rin == 'no'):
+        return False
+    return sReturn #special return - for non y/n input
+
+#convert string into int, iff possible, or float, iff possible. Else return the same string
+def parse(text):
+    """converts string into int iff possible, or float if possible (and int not possible)"""
+    result = text
+    try:
+        result = int(text)#result = abs(int(text)) menus consider -1 == 1?
+    except ValueError:
+        try:
+            result = float(text)
+        except ValueError:
+            pass
+    return result
+
+# check if target string(may represent float or int too!) is in the given list(int float equality applies for strings!)
+# eg is_inside("001.00", ['1']) -> True
+def is_inside(target, l, ignoreCase=True):#rewrite (pythonify) - as in autocomplete_input()
+    """checks if target string is in l, accounting for different number representations (if strings represent numbers) and case differences"""
+    if (not ignoreCase):# redundant, never used?
+        if (target in l):# should technically traverse, use parse ...
+            return target #True
+        else:
+            return None #False
+    else:
+        for e in l:
+            if (parse(e.lower()) == parse(target.lower())):
+                return e #True
+        return None #False
+
+# formats text ... "Welcome to ${EMPHASIS}HistManager{ENDFORMAT}$, version ${UNDERLINE}1.0{ENDFORMAT}$"
+def prettify(text):
+    """
+    prettifies text by converting ${format-option} to relevant format character
+
+    printing pretty text for this project was done by embedding it with formatting options surrounded by curly braces and preceeded (sometimes succeeded) by dollar signs.
+    eg: '${EMPHASIS}${RED}very strongly highlighted text{ENDFORMAT}$'
+    """
+    for k in style_codes:
+        text = text.replace("${" + k.upper() + "}", style_codes[k])
+    normals = ["${END}", "${ENDFORMAT}", "{END}$", "{ENDFORMAT}$", "{NORMAL}$"]
+    for e in normals:
+        text = text.replace(e, style_codes['normal'])
+    return text
+
+# print prettified text, redundant one line veneer function
+def pprint(text, endc='\n'):
+    """[wrapper function] prints text after formatting"""
+    print(prettify(text), end=endc)
+
+def get_default_style_codes():
+    return {
+        "normal":"\033[0m",
+        "bold":"\033[1m",#currently unused
+        "underline":"\033[4m",#currently unused
+        "INFORMAT":"\033[33m",
+        "ERRFORMAT":"\033[31m",
+        "COMMENTARY":"\033[34m",
+        "EMPHASIS":"\033[1m",
+        "PFORMAT":"",#currently unused
+
+        #could be used later: ?
+        "black":"\033[30m",
+        "red":"\033[31m",
+        "green":"\033[32m",
+        "yellow":"\033[33m",
+        "blue":"\033[34m",
+        "magenta":"\033[35m",
+        "cyan":"\033[36m",
+        "white":"\033[37m",
+
+        "bblack":"\033[90m",
+        "bred":"\033[91m",
+        "bgreen":"\033[92m",
+        "byellow":"\033[93m",
+        "bblue":"\033[94m",
+        "bmagenta":"\033[95m",
+        "bcyan":"\033[96m",
+        "bwhite":"\033[97m",
+
+        "hblack":"\033[40m",
+        "hred":"\033[41m",
+        "hgreen":"\033[42m",
+        "hyellow":"\033[43m",
+        "hblue":"\033[44m",
+        "hmagenta":"\033[45m",
+        "hcyan":"\033[46m",
+        "hwhite":"\033[47m",
+
+        "bhblack":"\033[100m",
+        "bhred":"\033[101m",
+        "bhgreen":"\033[102m",
+        "bhyellow":"\033[103m",
+        "bhblue":"\033[104m",
+        "bhmagenta":"\033[105m",
+        "bhcyan":"\033[106m",
+        "bhwhite":"\033[107m"
+    }
+
+def get_funcmap():
+    """[wrapper function] returns the histmanager submenu function {user-code:functon map}"""
+    return {
+        '1':newenv,
+        '2':renamenv,
+        '3':mergenv,
+        '4':archivenv,
+        '5':viewarchives,
+        '6':unarchivenv,
+        '7':viewhist
+    }
+
 def set_env():
     """
     Sets the Environment of the Terminal Session
-    
+
     Prompts the user to select an environment. The list of environments is read from the 'environments.khtxt' file. A Number of intermediate steps may occur - calls to settings(), etc, depending on the users commands. Finally an environment is set - the 'currentenv.khtxt' file is updated, and the relevant history is imported into the terminal.
     """
-    menu = read_dic(fp + 'environments.khtxt')
-    env = display_menu(menu)
-    if (type(env) == type(1.0)):
-        if (env == 0.1):
-            newenv()
-        elif (env == 0.2):
-            renamenv()
-        elif (env == 0.3):
-            mergenv()
-        elif (env == 0.4):
-            archivenv()
-        elif (env == 0.5):
-            viewarchives()
-        elif (env == 0.6):
-            unarchivenv()
-        elif (env == 0.7):
-            viewhist()
-        elif (env >= 0.0 and env < 1.0):
-            settings()
-        else:
-            print("invalid environment input, try again")
-        return set_env()
-    if (type(env) != type("")):
-        print("invalid environment input, try again")
-        return set_env()
-    if (env == 'histmanager-settings'):
-        settings()
-        return set_env()
-    cf = open(fp + 'currentenv.khtxt', 'w')
-    cf.write(env)
-    cf.write("\n")
-    cf.write(str(lines(env)))
-    cf.close()
-    os.rename(fp + "history/" + env + ".khtxt", dbh)
+    env = get_env()
+    write_file(fp + 'currentenv.khtxt', env + '\n' + str(lines(env)))
+    os.rename(fp + 'history/' + env + '.khtxt', dbh)
     print('')
-    print("" + env + " history sucessfully imported.")
+    pprint("${COMMENTARY}${EMPHASIS}" + env + "{ENDFORMAT}$${COMMENTARY} history sucessfully imported.{ENDFORMAT}$")
     return env
 
+# menu is the dictionary read from environments.khtxt
+def get_env():
+    """
+    [helper function] fetches user's environment setting choice
+    """
+    d = read_dic(fp + 'environments.khtxt')
+    menu = display_menu(d)#menu = {"0":"HistManager-Settings", "1":"Master", "2":"Java", "3":"Python3" ... }
+    d['Master'] = 0 #! just for '' choice to function at input:
+    rchoice = ''
+    while (rchoice == ''):
+        rchoice = get_input("Enter choice: ", acceptableOptions=['', '0.1', '0.2', '0.3', '0.4', '0.5', '0.6', '0.7'] + [k for k in menu] + [v for v in menu.values()], eReturn=False)
+        if (rchoice == ''):
+            if (prevenv != None and (is_inside(prevenv, d) != None and d[is_inside(prevenv, d)] >= 0)):
+                return is_inside(prevenv, d)# is_inside handles case: prevenv 'java' renamed to "Java" (a case change)
+        if (rchoice == '0' or rchoice == 'HistManager-Settings'):
+            settings()
+            return get_env()
+        numchoice = parse(rchoice)
+        if (type(numchoice) == type(0)):
+            return menu[rchoice]
+        elif (type(numchoice) == type(0.0)):
+            get_funcmap()[str(int(numchoice*10))]()
+            pprint("returning to environment menu{ENDFORMAT}$")
+            return get_env()
+    return rchoice
+
 def display_menu(menu):
-    """
-    [helper function] fetches user's environment setting choice after displaying the environment menu
-    """
-    print("\n[Environment Menu] Select an environment for this session:")
-    i = 2;
-    print("(or enter '0' or '1' to go to HistManager-Settings or Master, respectively)")
+    """[helper function] print the environment menu, and return the map of return values corresponding to the menu printed"""
+    pprint("\n${EMPHASIS}[Environment Menu]{ENDFORMAT}$ Select an environment for this session:")
+    pprint("(or enter '0' to go to HistManager-Settings)")
     print("\t0) HistManager-Settings")
     print("\t1) Master")
-    for k in sorted(menu):
-        if (menu[k] < 0):
+    returnValues = print_envs(menu, startIndex=2)
+    returnValues["0"] = "HistManager-Settings"
+    returnValues["1"] = "Master"
+    return returnValues
+
+# prints sorted envs from a dictionary
+def print_envs(envs, showunarch=True, showarch=False, showsysgenarch=False, startIndex=1):
+    """
+    [helper function] prints specified environments as a menu to the user - returning a map with {option:environment}
+
+    (dict) envs: the dictionary representing all the current environments (from environments.khtxt file)
+    (bool) showunarch(=True): whether to show unarchived environments
+    (bool) showarch(=False): whether to show archived environments
+    (bool) showsysgenarch(=False): whether to show system generated archived environments (Error-Env and Pre-Merge), if showing archived environments
+    """
+    returnValues = {}#{"0":"HistManager-Settings", "1":"Master"}
+    for k in sorted(envs):
+        if ((not showarch) and envs[k] < 0):
             continue
-        print('\t' + str(i) + ') ' + str(k))
-        i = i + 1
-    rchoice = input("Enter choice: ")
-    if (rchoice == ''):
-        if (prevenv is not None):
-            return prevenv
-        else:
-            while(rchoice == ''):
-                rchoice = input("Enter choice: ")
-    # SHORTEN
-    choice = -2
-    try:
-        choice = int(rchoice)
-    except ValueError:
-        try:
-            schoice = float(rchoice)
-        except ValueError:
-            #assuming choice was either typed out fully and matches a key, or was a subsetting decimal
-            for k in menu:
-                if (rchoice.lower() == k.lower()):
-                    return k
-            if (rchoice.lower() == "histmanager-settings"):
-                return "histmanager-settings"
-            if (rchoice.lower() == "master"):
-                return "Master"
-            return -1#error
-        return schoice #assume choice was a 'subsetting'
-    #the choice was an integer:
-    if (choice == 0):
-        return "histmanager-settings"
-    if (choice == 1):
-        return "Master"
-    j = 2
-    for k in sorted(menu):
-        if (menu[k] < 0):
+        elif (showarch and envs[k] < 0 and not showsysgenarch and ('Error-Env' in k or 'Pre-Merge' in k)):
             continue
-        if (j == choice):
-            return k
-        j = j + 1
-    return (-1)*abs(choice)# ERROR
+        if ((not showunarch) and envs[k] > 0):
+            continue
+        print('\t' + str(startIndex) + ') ' + str(k))
+        returnValues[str(startIndex)] = str(k)
+        startIndex = startIndex + 1
+    return returnValues
 
 def settings():
     """
     displays settings menu, and takes appropriate action based on user input
     """
     print("")
-    #print("You've entered histmanager settings.")
-    print("[HistManager Settings] Choose an option:")
+    pprint("${EMPHASIS}[HistManager Settings]{ENDFORMAT}$ Choose an option:")
     print("\t1) Set up a new environment")
     print("\t2) Rename an environment")
     print("\t3) Merge two environments")
@@ -147,219 +370,197 @@ def settings():
     print("\t6) Restore an archived environment")
     print("\t7) View environment history")
     print("\t8) Leave settings and go back to environment menu")
-    rchoice = input("Enter choice: ")
-    if (rchoice == ''):
-        print("returning to environment menu")
-        return
-    choice = -1
-    try:
-        choice = int(rchoice)
-    except ValueError:
-        print("invalid option, returning to environment menu")
-        return "Error - invalid choice entered at settings menu"
-    if (choice == 1):
-        newenv()
-    elif (choice == 2):
-        renamenv()
-    elif (choice == 3):
-        mergenv()
-    elif (choice == 4):
-        archivenv()
-    elif (choice == 5):
-        viewarchives()
-    elif (choice == 6):
-        unarchivenv()
-    elif (choice == 7):
-        viewhist()
-    elif (choice == 8):
-        return
-    else:
-        print("invalid option, try again")
+    rchoice = get_input("Enter choice: ", acceptableOptions=['1', '2', '3', '4', '5', '6', '7', '8', '17', '257', '65537', '73', '42', ''], eReturn=False)# add valid options 'exit', 'quit', 'return', etc?
+    if (rchoice != '8' and rchoice != ''):
+        pprint("(Press '${EMPHASIS}enter{ENDFORMAT}$' anytime to abort operation and return to HistManager Settings)")
+        if (int(rchoice) < 8):
+            get_funcmap()[rchoice]()
+        else:# PIZZAZZ:
+            disconfig(rchoice)
+        pprint("returning to settings menu{ENDFORMAT}$")
         settings()
-        return #redundant?
+    else:
+        pprint("${COMMENTARY}returning to environment menu{ENDFORMAT}$")
+
+def is_valid_name(key):#, silent=False):
+    """[helper function] intput validation function - ensures that the input environment is a valid (environment) name"""
+    if (not( re.match("^[A-Za-z0-9+_-]*$", key) )):
+        pprint("${COMMENTARY}environment names must be alphanumeric, please try again{ENDFORMAT}$")
+    elif (len(key)>=1 and not key[0].isalpha()):
+        pprint("${COMMENTARY}environment names must begin with letters, please try again{ENDFORMAT}$")
+    elif ((key.lower() == 'histmanager-settings') or (key.lower() == 'master') or ('archive' in key.lower()) or ('error-env' in key.lower()) or ('pre-merge' in key.lower())):
+        pprint("${COMMENTARY}can't create an environment named '" + key + "', please try a different name{ENDFORMAT}$")
+    else:
+        return True
+    return False
+
+def doesnt_exist_already(key):
+    """[helper function] intput validation function - ensures that the input environment doesn't exist already"""
+    env = is_inside(key, read_dic(fp + 'environments.khtxt').keys())
+    if (env != None):# key is already an environment
+        pprint("${COMMENTARY}environment '" + env + "' already exists (may be archived), please try a different name{ENDFORMAT}$")
+        return False
+    return True
+
+def exists_already(key):
+    """[helper function] intput validation function - ensures that the input environment exists already"""
+    env = is_inside(key, read_dic(fp + 'environments.khtxt').keys())
+    if (env == None):# key is unique
+        pprint("${COMMENTARY}environment '" + key + "' doesn't exist, please try again{ENDFORMAT}$")
+        return False
+    return True
+
+def is_not_master(key):
+    """[helper function] intput validation function - ensures that the input environment isn't Master"""
+    if (key.lower() == 'master'):
+        pprint("${COMMENTARY}can't modify the Master environment, please try a different environment{ENDFORMAT}$")
+        return False
+    return True
+
+def master_flag(key):
+    """[helper function] intput validation function - ensures that the input environment isn't master - but doesn't print any error messages"""
+    if (key.lower() == 'master'):
+        return False
+    return True
+
+def is_nonempty(key):
+    """[helper function] intput validation function - ensures that the input string is nonempty (isn't blank)"""
+    if (key == ''):
+        return False
+    else:
+        return True
+
+def is_unarchived(key):
+    """[helper function] intput validation function - ensures that the input environment (assumed to exist) is unarchived"""
+    d = read_dic(fp + 'environments.khtxt')
+    env = is_inside(key, d.keys())# key refers to env
+    if (d[env] < 0):# env is archived
+        pprint("${COMMENTARY}environment '" + env + "' is already archived, please try a different environment{ENDFORMAT}$")
+        return False
+    return True
+
+def is_archived(key):
+    """[helper function] intput validation function - ensures that the input environment (assumed to exist) is archived"""
+    d = read_dic(fp + 'environments.khtxt')
+    env = is_inside(key, d.keys())# key refers to env
+    if (d[env] > 0):# env is unarchived
+        pprint("${COMMENTARY}environment '" + env + "' is currently not archived, please try a different environment{ENDFORMAT}$")
+        return False
+    return True
 
 def newenv(sysenv=None):
     """
     Initialises a new environment
-    
-    (str) sysenv(=None): if not None, environment name is set to sysenv, and the function is 'silenced' - has no interaction with the terminal output
+
+    (str) sysenv(=None): if not None, the new environment's name is set to sysenv, and the function is 'silenced' - has no interaction with the terminal output
     """
     filepath = fp + 'environments.khtxt'
     d = read_dic(filepath)
-    l = len(d) + 1
-    if (sysenv is not None):
-        d[sysenv] = l
-        write_dic(d, filepath)
-        f = open((fp + 'history/' + sysenv + '.khtxt'), 'w')
-        f.close()
-        return
-    print('[Creating New Environment]')
-    key = input("\tEnter the name of the new environment: ")
-    if (key == ''):
-        print("returning to settings menu")
-        settings()
-        return
-    if ((key.lower() == 'histmanager-settings') or ("archive" in key.lower()) or ("error-env" in key.lower()) or ("pre-merge" in key.lower())):
-        print("can't create environment with that name, try again")
-        newenv()
-        return
-    if (key.lower() == 'master'):# merge with previous if
-        print("can't create environment with that name, try again")
-        newenv()
-        return
-    if (not( re.match("^[A-Za-z0-9+_-]*$", key) )):
-        print("invalid environment name - environment names must be alphanumeric, please try again")
-        newenv()
-        return
-    actualenvname = None
-    present = False
-    for k in d:
-        if (key.lower() == k.lower()):
-            present = True
-            actualenvname = k
-    if (present):#if (actualenvname is not None):
-        print("Error - environment " + actualenvname + " already exists (may be archived), try again")
-        newenv()
-        return
-    d[key] = l
-    write_dic(d, filepath)
-    f = open((fp + 'history/' + key + '.khtxt'), 'w')
-    f.close()
-    print("Environment '" + key + "' created successfully, returning to environment menu")
+    key = -1
+    if (sysenv == None):
+        pprint('\n${EMPHASIS}[New Environment]{ENDFORMAT}$', endc='')
+        while (type(key) == type(0)):
+            key = smart_input("\nEnter the name of the new environment: ", [is_nonempty, is_valid_name, doesnt_exist_already])
+            if (key == 0):# input was empty - ''
+                return
+        pprint("${COMMENTARY}Environment '" + key + "' created successfully, ", endc='')#returning to environment menu")
+    else:# if system call
+        key = sysenv
+    d[key] = len(d) + 1
+    write_dic(filepath, d)
+    create_file(fp + 'history/' + key + '.khtxt')
 
-def renamenv(oname=None, nname=None):
+def renamenv(sysoname=None, sysnname=None):
     """
     Renames an existing environment
-    
+
     (str) oname(=None): if not None, this is the environment that is to be renamed
     (str) nname(=None): if not None, this is the new environment name
-    
+
     Either both oname and nname should be provided by the calling code, or neither. If provided, the function is 'silenced' - has no interaction with the terminal output
     """
+    global prevenv
     filepath = fp + 'environments.khtxt'
     d = read_dic(filepath)
-    #l = len(d) + 1 #purpose?
-    if ((oname is not None) and (nname is not None)):#ie system call
-        val = d[oname]
-        del d[oname]
-        d[nname] = val
-        write_dic(d, filepath)
-        os.rename(fp + 'history/' + oname + '.khtxt', fp + 'history/' + nname + '.khtxt')
-        return
     if (len(d) == 0):
-        print("There are no environments to rename, returning to settings menu")
-        settings()
+        pprint("${COMMENTARY}There are no environments to rename (Master can't be modified), ", endc='')#returning to settings menu")
+        #settings()
         return
-    
-    print('[Renaming Environment]')
-    oname = input("\tEnter the current environment name: ")
-    if (oname == ''):
-        print("returning to settings menu")
-        settings()
-        return
-    if (oname.lower() == 'master'):
-        print("can't rename Master, returning to settings menu")
-        settings()
-        return
-    for k in d:
-        if (oname.lower() == k.lower()):
-            oname = k
-    if (not(oname in d.keys())):
-        print("Error - environment " + oname + " doesn't exist, try again")
-        renamenv()
-        return
-    
-    nname = input("\tEnter the new name for the environment: ")
-    if (nname == ''):
-        print("returning to settings menu")
-        settings()
-        return
-    if ((nname.lower() == 'histmanager-settings') or ('archive' in nname.lower()) or ("error-env" in nname.lower()) or ("pre-merge" in nname.lower())):
-        print("can't have an environment with that name, try again")
-        renamenv()
-        return
-    if (nname.lower() == 'master'):# merge with previous if
-        print("can't have an environment with that name, try again")
-        renamenv()
-        return
-    if (not( re.match("^[A-Za-z0-9+_-]*$", nname) )):
-        print("invalid environment name - environment names can only contain letters, please try again")
-        renamenv()
-        return
-    actualenvname = None
-    present = False
-    for k in d:
-        if (nname.lower() == k.lower()):
-            present = True
-            actualenvname = k
-    if (present):#if (actualenvname is not None):
-        print("Error - environment " + actualenvname + " already exists (may be archived), try again")
-        renamenv()
-        return
-    
-    if (d[oname] < 0):
-        aval = d[oname]
-        del d[oname]
-        d[nname] = aval
-        write_dic(d, filepath)
-        os.rename(fp + 'history/' + oname + str(aval) + '-archive.khtxt', fp + 'history/' + nname + str(aval) + '-archive.khtxt')
-        print("Archived environment '" + oname + "' successfully renamed to '" + nname + "', returning to environment menu")
-        return
+    if ((sysoname is not None) and (sysnname is not None)):#ie system call
+        oname = sysoname
+        nname = sysnname
+    else:# not a system call
+        pprint("\n${EMPHASIS}[Rename Environment]{ENDFORMAT}$", endc='')
+        oname = -1
+        while (type(oname) == type(0)):
+            oname = smart_input("\nEnter the current name of the environment you wish to rename: ", [is_nonempty, is_not_master, exists_already], autocompleteOptions=[e for e in d])# order important
+            if (oname == 0):# input was empty - ''
+                return
+        oname = is_inside(oname, d)
+        nname = -1
+        while (type(nname) == type(0)):
+            if (nname == -1):# UNECCESSARY PIZZAZZ???
+                nname = smart_input("Enter the new name for '" + oname + "': ", [is_nonempty, is_valid_name])
+            else:
+                nname = smart_input("\nEnter the new name for '" + oname + "': ", [is_nonempty, is_valid_name])
+            if (nname == 0):# input was empty - ''
+                return
+            envt = is_inside(str(nname), d.keys())
+            if (envt != None):# nname is already an environment
+                if (nname.lower() != oname.lower() or nname == oname):
+                    pprint("${COMMENTARY}environment '" + envt + "' already exists (may be archived), please try a different name{ENDFORMAT}$")
+                    nname = -2
     val = d[oname]
     del d[oname]
     d[nname] = val
-    write_dic(d, filepath)
-    os.rename(fp + 'history/' + oname + '.khtxt', fp + 'history/' + nname + '.khtxt')
-    print("Environment '" + oname + "' successfully renamed to '" + nname + "', returning to environment menu")
+    write_dic(filepath, d)
+    if (oname == prevenv):
+        prevenv = nname
+    if (d[nname] < 0):
+        os.rename(fp + 'history/' + oname + str(val) + '-archive.khtxt', fp + 'history/' + nname + str(val) + '-archive.khtxt')
+        opt = ("Archived environment '" + oname + "' successfully renamed to '" + nname + "', ")#returning to environment menu")
+    else:
+        os.rename(fp + 'history/' + oname + '.khtxt', fp + 'history/' + nname + '.khtxt')
+        opt = ("Environment '" + oname + "' successfully renamed to '" + nname + "', ")#returning to environment menu")
+    if (sysoname == None and sysnname == None):
+        pprint('${COMMENTARY}'+opt, endc='')
+
+def len_unarchived(envs):
+    """[helper function] returns the number of currently unarchived environments"""
+    result = 0
+    for e in envs:
+        if(envs[e] > 0):
+            result = result + 1
+    return result
 
 def archivenv(sysenv=None):
     """
     Archives an existing environment
-    
+
     (str) sysenv(=None): if not None, this is the environment that is archived, and the function is 'silenced' - has no interaction with the terminal output
     """
     filepath = fp + 'environments.khtxt'
     d = read_dic(filepath)
-    if (sysenv is not None):
-        val = d[sysenv]
-        d[sysenv] = val*(-1)
-        write_dic(d, filepath)
-        os.rename(fp + 'history/' + sysenv + '.khtxt', fp + 'history/' + sysenv + '-' + str(val) + '-archive.khtxt')
-        return (sysenv + '-' + str(val) + '-archive.khtxt')#returns the filename
-    archiveable = False
-    for k in d:
-        if (d[k] > 0):
-            archiveable = True
-    if (not archiveable):
-        print("There are no environments to archive, returning to settings menu")
-        settings()
+    if (len_unarchived(d) == 0):
+        pprint("${COMMENTARY}There are no environments to archive, ", endc='')#returning to settings menu")
         return
-    print('[Archiving Environment]')
-    denv = input("Enter the environment you wish to archive: ")
-    if (denv == ''):
-        print("returning to settings menu")
-        settings()
-        return
-    if (denv.lower() == 'master'):
-        print("can't archive Master, returning to settings menu")
-        settings()
-        return
-    for k in d:
-        if (denv.lower() == k.lower()):
-            denv = k
-    if (not(denv in d.keys())):
-        print("Error - environment " + denv + " doesn't exist, try again")
-        archivenv()
-        return
-    if (d[denv] < 0):
-        print("Environment " + denv + " is already archived, returning to environment menu")
-        return
-    val = d[denv]
-    #del d[denv]
-    d[denv] = val*(-1)
-    write_dic(d, filepath)
-    os.rename(fp + 'history/' + denv + '.khtxt', fp + 'history/' + denv + '-' + str(val) + '-archive.khtxt')
-    print("Environment '" + denv + "' successfully archived, returning to environment menu")
+    if (sysenv is not None):#system call
+        denv = sysenv
+    else:
+        pprint("\n${EMPHASIS}[Archive Environment]{ENDFORMAT}$", endc='')
+        denv = -1
+        while (type(denv) == type(0)):
+            denv = smart_input("\nEnter the environment you wish to archive: ", [is_nonempty, is_not_master, exists_already, is_unarchived], autocompleteOptions=[e for e in d if d[e]>0])# order important
+            if (denv == 0):# input was empty - ''
+                return
+        denv = is_inside(denv, d)
+    d[denv] = d[denv]*(-1)
+    write_dic(filepath, d)
+    os.rename(fp + 'history/' + denv + '.khtxt', fp + 'history/' + denv + str(d[denv]) + '-archive.khtxt')
+    if (sysenv != None):# system call
+        return denv + str(d[denv]) + '-archive.khtxt'
+    else:
+        pprint("${COMMENTARY}Environment '" + denv + "' successfully archived, ", endc='')
 
 def unarchivenv():
     """
@@ -367,236 +568,134 @@ def unarchivenv():
     """
     filepath = fp + 'environments.khtxt'
     d = read_dic(filepath)
-    hasarchived = False
-    for v in d.values():
-        if (v < 0):
-            hasarchived = True
-            break
-    if (not hasarchived):
-        print("There are no archived environments, returning to settings menu")
-        settings()
+    if(len(d) - len_unarchived(d) == 0):
+        pprint("${COMMENTARY}There are no archived environments, ", endc='')
         return
-    print('[Restoring Archived Environment]')
-    print("Select the environment you wish to resore: ")
-    i = 1
-    for k in sorted(d):
-        if (d[k] >= 0):
-            continue
-        print('\t' + str(i) + ') ' + str(k))
-        i = i + 1
-    print('\t' + str(i) + ') ' + "Return to settings menu")
-    rchoice = input("Enter choice: ")
-    if (rchoice == ''):
-        print("returning to settings menu")
-        settings()
-        return
-    renv = -2
-    try:
-        renv = int(rchoice)
-    except ValueError:
-        if (rchoice.lower() == 'master'):
-            print("Error - environment Master is already unarchived, returning to settings menu")
-            settings()
+    pprint("\n${EMPHASIS}[Restore Archived Environment]{ENDFORMAT}$")
+    print("Select the environment you wish to restore: ")
+    envmap = print_envs(d, showunarch=False, showarch=True, showsysgenarch=True)
+    rchoice = -1
+    while (type(rchoice) == type(0)):
+        if (rchoice == -1):# UNECCESSARY PIZZAZZ???
+            rchoice = smart_input("Enter choice: ", [is_nonempty, is_not_master, exists_already, is_archived], convertMap=envmap, autocompleteOptions=[e for e in d if d[e]<0])# order important
+        else:
+            rchoice = smart_input("\nEnter choice: ", [is_nonempty, is_not_master, exists_already, is_archived], convertMap=envmap, autocompleteOptions=[e for e in d if d[e]<0])# order important
+        if (rchoice == 0):# input was empty - ''
             return
-        for k in sorted(d):
-            if (rchoice.lower() == k.lower()):
-                renv = k
-                break
-        if (not(renv in d.keys())):
-            print("Error - environment '" + rchoice + "' doesn't exist, try again")
-            unarchivenv()
-            return
-    #assume rchoice was an int:
-    if (renv == i):
-        print("Returning to settings menu")
-        settings()
-        return
-    j = 1
-    for k in sorted(d):
-        if (d[k] >= 0):
-            continue
-        if (j == renv):
-            renv = k
-            break
-        j = j + 1
-    if (type(renv) == type(0)):
-        print("invalid choice, try again")
-        unarchivenv()
-        return
-    if (d[renv] >= 0):
-        print("Error - environment " + renv + " is already unarchived, returning to settings menu")
-        settings()
-        return
-    val = d[renv]
-    #del d[denv]
-    d[renv] = val*(-1)
-    write_dic(d, filepath)
+    renv = is_inside(rchoice, d)
+    d[renv] = d[renv]*(-1)
+    write_dic(filepath, d)
     os.rename(fp + 'history/' + renv + '-' + str(d[renv]) + '-archive.khtxt', fp + 'history/' + renv + '.khtxt')
-    print("Environment '" + renv + "' successfully restored, returning to environment menu")
+    pprint("${COMMENTARY}Environment '" + renv + "' successfully restored, ", endc='')
 
 def viewarchives():
-    """Displays all archived environments"""
+    """Displays archived environments"""
     filepath = fp + 'environments.khtxt'
     d = read_dic(filepath)
-    hasarchived = False
-    for v in d.values():
-        if (v < 0):
-            hasarchived = True
-            break
-    if (not hasarchived):
-        print("There are no archived environments, returning to settings menu")
-        settings()
+    if(len(d) - len_unarchived(d) == 0):
+        pprint("${COMMENTARY}There are no archived environments, ", endc='')
         return
-    print('[Listing Archived Environments]')
-    showsysgen = False
-    while(True):
-        choice = input("Show system generated archives? (y/n)\t")
-        if (choice == ''):
-            print("returning to settings menu")
-            settings()
-            return
-        if ((choice == 'y') or (choice == 'Y') or (choice.lower() == 'yes')):
-            showsysgen = True
-            break
-        elif ((choice == 'n') or (choice == 'N') or (choice.lower() == 'no')):
-            showsysgen = False #redundant
-            break
-        else:
-            #print("invalid choice, enter 'y' or 'n'")
-            pass
-    i = 1
-    for k in sorted(d):
-        if (d[k] < 0):
-            if ((not showsysgen) and ( ("Error-Env" in str(k)) or ("Pre-Merge" in str(k)) )):
-                continue
-            print("\t" + str(i) + ") " + str(k))
-            i = i + 1
-    input("Press enter to return to environment menu")
+    pprint("\n${EMPHASIS}[View Archived Environments]{ENDFORMAT}$")
+    showsysgen = get_yn("Show unmodified system generated archives too? (y/n)\t")
+    if (showsysgen == None):
+        return
+    openvs = print_envs(d, showunarch=False, showarch=True, showsysgenarch=showsysgen)
+    if (len(openvs) == 0):
+        pprint("${COMMENTARY}There are no user generated archives, ", endc='')
+    else:
+        input(prettify("Press enter to return${COMMENTARY}"))
 
 def mergenv():
     """Merges two existing environments"""
-    mergeablenv = 0
     d = read_dic(fp + 'environments.khtxt')
-    for k in d:
-        if (d[k] > 0):
-            mergeablenv = mergeablenv + 1
-    if (mergeablenv < 2):
-        print("There aren't enough environments to merge, returning to settings menu")
-        settings()
+    if (len_unarchived(d) < 2):
+        pprint("${COMMENTARY}There aren't enough environments to merge, ", endc='')
         return
-    print('[Merging Environments]')
-    print("All the history from the first environment will be appended to that from the second environment, and the first environment will be deleted")
-    env1 = input("Enter the name of the first environment you want to merge: ")
-    if (env1 == ''):
-        print("returning to settings menu")
-        settings()
-        return
-    env2 = input("Enter the name of the second environment you want to merge: ")
-    if (env2 == ''):
-        print("returning to settings menu")
-        settings()
-        return
-    if ((env1.lower() == 'master') or (env2.lower() == 'master')):
-        print("can't merge Master, returning to settings menu")
-        settings()
-        return
+    pprint("\n${EMPHASIS}[Merge Environments]{ENDFORMAT}$")
+    print("(The first environment will be deleted and its history appended to the second environment)", end='')
+    oname = -1
+    while (type(oname) == type(0)):
+        oname = smart_input("\nEnter the name of the first environment you want to merge: ", [is_nonempty, is_not_master, exists_already, is_unarchived], autocompleteOptions=[e for e in d if d[e]>0])# order important
+        if (oname == 0):# input was empty - ''
+            return
+    env1 = is_inside(oname, d)
+    nname = -1
+    while (type(nname) == type(0)):
+        if (nname == -1):# UNECCESSARY PIZZAZZ???
+            nname = smart_input("Enter environment to merge '" + oname + "' into: ", [is_nonempty, is_not_master, exists_already, is_unarchived], autocompleteOptions=[e for e in d if d[e]>0])# order important
+        else:
+            nname = smart_input("\nEnter environment to merge '" + oname + "' into: ", [is_nonempty, is_not_master, exists_already, is_unarchived], autocompleteOptions=[e for e in d if d[e]>0])# order important
+        if (nname == 0):# input was empty - ''
+            return
+    env2 = is_inside(nname, d)
+    """#UNKNOWN ERROR
+    env1 = -1
+    while (type(env1) == type(0)):
+        env1 = smart_input("\nEnter the name of the first environment you want to merge: ", [is_nonempty, is_not_master, exists_already, is_unarchived], autocompleteOptions=[e for e in d if d[e]>0])# order important
+        if (env1 == 0):# input was empty - ''
+            return
+    env1 = is_inside(env1, d)
+    env2 = -1
+    while (type(env2) == type(0)):
+        if (env2 == -1):# UNECCESSARY PIZZAZZ???
+            #print("1")
+            env2 = smart_input("Enter the name of the environment you want to merge " + env1 + "'s history into: ", [is_nonempty, is_not_master, exists_already, is_unarchived])#, autocompleteOptions=[e for e in d if d[e]>0])# order important
+        else:
+            #print("2")
+            env2 = smart_input("\nEnter the name of the environment you want to merge " + env1 + "'s history into: ", [is_nonempty, is_not_master, exists_already, is_unarchived])#, autocompleteOptions=[e for e in d if d[e]>0])# order important
+        if (env2 == 0):# input was empty - ''
+            return
+    env2 = is_inside(env2, d)
+    """
     envnum = 0 # mergecount
     for k in sorted(d):
-        if (env1.lower() == k.lower()):
-            env1 = k
-        if (env2.lower() == k.lower()):
-            env2 = k
         if ("Pre-Merge" in k):
             envnum = int(k[-4:])
-    envnum = envnum + 1
-    envnum1 = str(str(envnum).zfill(4))
-    #envnum = envnum + 1
-    envnum2 = str(str(envnum).zfill(4))
-    if (not(env1 in d.keys())):
-        print("Error - environment " + env1 + " doesn't exist, try again")
-        mergenv()
-        return
-    if (not(env2 in d.keys())):
-        print("Error - environment " + env2 + " doesn't exist, try again")
-        mergenv()
-        return
-    if (d[env1] < 0):
-        print("Error - environment " + env1 + " has been archived already, try again")
-    if (d[env2] < 0):
-        print("Error - environment " + env2 + " has been archived already, try again")
-    renamenv(env1, env1 + "-Pre-Merge" + envnum1)
-    renamenv(env2, env2 + "-Pre-Merge" + envnum2)
-    aenv1 = archivenv(env1 + "-Pre-Merge" + envnum1)
-    aenv2 = archivenv(env2 + "-Pre-Merge" + envnum2)
+    envnum = str(str(envnum+1).zfill(4))
+    renamenv(env1, env1 + "-Pre-Merge" + envnum)
+    renamenv(env2, env2 + "-Pre-Merge" + envnum)
+    aenv1 = archivenv(env1 + "-Pre-Merge" + envnum)
+    aenv2 = archivenv(env2 + "-Pre-Merge" + envnum)
     newenv(env2)
     copyfile(fp + 'history/' + aenv2, fp + 'history/' + env2 + '.khtxt')
-    fr = open(fp + 'history/' + aenv1, 'r')
     fw = open(fp + 'history/' + env2 + '.khtxt', 'a')
-    alllines = fr.readlines()
-    fr.close()
+    alllines = read_file(fp + 'history/' + aenv1)
     for l in alllines:
         fw.write(l)
     fw.close()
-    print("History from " + env1 + " has now been merged with " + env2)
+    pprint("${COMMENTARY}History from '" + env1 + "' has now been merged with '" + env2 + "', ", endc='')
 
 def viewhist(sysenv=None, displaymode=0):
     """
     Displays or returns history from an unarchived environment
-    
+
     (str) sysenv(=None): if not None, this is the environment whos history is returned, and the function is 'silenced' - has no interaction with the terminal output; else the history is printed and not returned
     (int) displaymode(=0): modes(1:entire history, 2:unique entries only, 3:unique commands only, -1:entire history - sorted alphabetically, -2:unique entries - sorted alphabetically, -1:unique commands - sorted alphabetically, OtherValues:invalid)
     """
     filepath = fp + 'environments.khtxt'
     d = read_dic(filepath)
-    venv = None
+    #venv = None
     if (sysenv is not None):
         venv = sysenv
     else :
-        print('[Viewing History]')
-        venv = input("Enter the environment who's history you want to view: ")
-        if (venv == ''):
-            print("returning to settings menu")
-            settings()
-            return
-        if (venv.lower() == 'master'):
-            venv = "Master"
-        else:
-            for k in d:
-                if (venv.lower() == k.lower()):
-                    venv = k
-            if (not(venv in d.keys())):
-                print("Error - environment " + venv + " doesn't exist, try again")
-                viewhist()
+        pprint("\n${EMPHASIS}[View History]{ENDFORMAT}$", endc='')
+        venv = -1
+        while (type(venv) == type(0)):
+            venv = smart_input("\nEnter the environment who's history you want to view: ", [is_nonempty, master_flag, exists_already, is_unarchived], autocompleteOptions=([e for e in d if d[e]>0] + ['Master']))# order important
+            if (venv == 0):# input was empty - ''
                 return
-            if (d[venv] < 0):
-                print("Error - environment " + venv + " has been archived, try again")
-                viewhist()
-                return
+            elif (venv == 1):# master
+                venv = "Master"
+        if (venv != "Master"):
+            venv = is_inside(venv, d)
         print("\t1) Show the entire history of \'" + venv + "\'")
         print("\t2) Omit any repeated entries found in the history of \'" + venv + "\'")
         print("\t3) Omit all repeated commands found in the history of \'" + venv + "\'")
-        choice = ''
-        print("E", end='')
-        while(type(choice) != type(0)):
-            rchoice = input("nter choice:\t")
-            if (rchoice == ''):
-                print("returning to settings menu")
-                settings()
-                return
-            else:
-                try:
-                    choice = int(rchoice)
-                except ValueError:
-                    print('invalid input, e', end='')
-                    continue
-                if (choice > 3 or choice < -3 or choice == 0):
-                    print('invalid input, e', end='')
-                    choice = ''
-                    continue
-    displaymode = choice
-    f = open(fp + "history/" + venv + ".khtxt", 'r')
-    lines = f.readlines()
-    f.close()
+        choice = get_input("Enter choice: ", acceptableOptions=['', '1', '2', '3', '-1', '-2', '-3'], eReturn=False)
+        if (choice == ''):
+            return
+        displaymode = int(choice)
+    lines = read_file(fp + "history/" + venv + ".khtxt")
     result = []
     for i in range(0, len(lines)):
         if (displaymode == 1 or displaymode == -1):
@@ -617,145 +716,151 @@ def viewhist(sysenv=None, displaymode=0):
                 result.append(lines[i][0:-1])
     if (displaymode < 0):
         result = sorted(result)
-#"""        elif (displaymode == 2):
-#            unique = True
-#            for j in range(0, i):
-#                if (lines[j].split() == lines[i].split()):
-#                    unique = False
-#                    break
-#            if (unique):
-#                result.append(lines[i][0:-1])
-#        elif (displaymode == 3):
-#            unique = True
-#            for j in range(0, i):
-#                if (lines[j].split()[0] == lines[i].split()[0]):
-#                    unique = False
-#                    break
-#            if (unique):
-#                result.append(lines[i][0:-1])"""
     if (sysenv == None):
         optofile = False
         if (len(result) > 250):
-            optofile = True #redundant
-            while(True):
-                choice = input("History is " + str(len(result)) + " entries long, redirect output to file? (y/n)\t")
-                if (choice == ''):
-                    print("returning to settings menu")
-                    settings()
-                    return
-                if ((choice == 'y') or (choice == 'Y') or (choice.lower() == 'yes')):
-                    optofile = True
-                    break
-                elif ((choice == 'n') or (choice == 'N') or (choice.lower() == 'no')):
-                    optofile = False #redundant
-                    break
-                else:
-                    #print("invalid choice, enter 'y' or 'n'")
-                    pass
+            optofile = get_yn("History is " + str(len(result)) + " entries long, redirect output to file? (y/n)\t")
+            if (optofile == None):
+                return
+        elif(len(result) == 0):
+            pprint("${COMMENTARY}History is currently empty, ", endc='')
+            return
         if (optofile):
-            fname = input("Enter unique filename (will be created in home directory):\t")
             try:
+                fname = get_input("Enter unique filename (will be created in home directory):\t")
                 edit = ''
-                if (os.path.isfile(os.path.expanduser('~/') + fname)):
-                    overwrite = False
-                    while(True):
-                        choice = input("File already exists, overwrite? (y/n)\t")
-                        if (choice == ''):
-                            print("returning to settings menu")
-                            settings()
-                            return
-                        if ((choice == 'y') or (choice == 'Y') or (choice.lower() == 'yes')):
-                            overwrite = True
-                            break
-                        elif ((choice == 'n') or (choice == 'N') or (choice.lower() == 'no')):
-                            overwrite = False #redundant
-                            break
-                        else:
-                            #print("invalid choice, enter 'y' or 'n'")
-                            pass
-                    if (not overwrite):
-                        print("returning to settings menu")
-                        settings()
+                while(os.path.isfile(os.path.expanduser('~/') + fname) or os.path.isfile(os.path.expanduser('~/') + fname + '.txt')):
+                    overwrite = get_yn("File already exists, overwrite? (y/n)\t")
+                    if (overwrite == None):
                         return
+                    elif (overwrite):
+                        edit = "(over)"
+                        break
                     else:
-                        choice = input("Confirm - overwrite file \'" + fname + "\'? (y/n)\t")
-                        if (choice == ''):
-                            print("returning to settings menu")
-                            settings()
-                            return
-                        elif (choice == 'y' or choice == 'Y' or choice == 'yes'):
-                            edit = '(over)'
-                        else:
-                            print("abort overwrite")
-                            print("returning to settings menu")
-                            settings()
-                            return
+                        fname = get_input("\nEnter unique filename (will be created in home directory):\t")
+                if (fname[-4:] != '.txt'):
+                    fname = fname + '.txt'
+                if (edit == '(over)'):
+                    oconfirm = get_yn("Confirm - overwrite file \'" + fname + "\'? (y/n)\t")
+                    if (oconfirm == None):
+                        return
+                    if (not oconfirm):
+                        pprint("${COMMENTARY}aborting overwrite, ", endc='')
+                        return
                 f = open(os.path.expanduser('~/') + fname, 'w')
                 for ele in result:
                     f.write(ele)
                     f.write("\n")
                 f.close()
-                print("History fetched from environment \'" + venv + "\' successfully " + edit + "written to \'" + fname + "\' in the home directory")
+                print("History fetched from environment \'" + venv + "\' successfully " + edit + "written to \'" + fname + "\' in the home directory.")
+                input(prettify("Press enter to return${COMMENTARY}"))
             except Exception:
-                print("Unable to create file, returning to settings menu")
-                settings()
+                pprint("${COMMENTARY}Error - unable to create file, ", endc='')#returning to settings menu")
                 return
         else:
-            print('')
+            print("")
             i = 1
             for ele in result:
                 print("   " + ele)
-            input("\nPress enter to return to environment menu")
+            input(prettify("\nPress enter to return${COMMENTARY}"))
     else:
         return result
+
+def disconfig(rchoice):
+    """
+    Configures display styles
+    """
+    if (rchoice == '42' or rchoice == '73'):
+        pprint("\n${EMPHASIS}[Configure Display]{ENDFORMAT}$ Choose a format number to execute: ")
+        pprint("\t3)     Reset display configuration to default")
+        pprint("\t5)     Toggle bold-font of all the ${EMPHASIS}emphasised{ENDFORMAT}$ text")
+        pprint("\t17)    Set the colour of the HistManager ${COMMENTARY}commentary{ENDFORMAT}$")
+        pprint("\t257)   Set the colour of the (typed) ${INFORMAT}input{ENDFORMAT}$ text")
+        pprint("\t65537) Set the colour of the input ${PFORMAT}prompt{ENDFORMAT}$")
+        rchoice = get_input("Enter choice: ", acceptableOptions=['3', '5', '17', '257', '65537', ''], eReturn=False)
+    if (rchoice != ''):
+        global style_codes
+        colours = ['normal', 'black', 'green', 'yellow', 'blue', 'magenta', 'cyan', 'white', 'bblack', 'bgreen', 'byellow', 'bblue', 'bmagenta', 'bcyan', 'bwhite']
+        if (rchoice == '5'):
+            if (style_codes['EMPHASIS'] == "\033[1m"):
+                style_codes['EMPHASIS'] = ''
+                pprint("${COMMENTARY}Emphasised text will no longer be bold.")
+            else:
+                style_codes['EMPHASIS'] = "\033[1m"
+                pprint("${COMMENTARY}Emphasised text henceforth be bold.")
+        elif (rchoice == '17'):
+            nc = rinput("Enter new commentary colour: ", colours, True)
+            if (nc.lower() in colours):
+                style_codes['COMMENTARY'] = style_codes[nc.lower()]
+                pprint("${COMMENTARY}Colour " + nc + " set as commentary colour.")
+            else:
+                pprint("${COMMENTARY}invalid colour, ", endc='')
+        elif (rchoice == '257'):
+            nc = rinput("Enter new input text colour: ", colours, True)
+            if (nc.lower() in colours):
+                style_codes['INFORMAT'] = style_codes[nc.lower()]
+                pprint("${COMMENTARY}Colour " + nc + " set as input text colour.")
+            else:
+                pprint("${COMMENTARY}invalid colour, ", endc='')
+        elif (rchoice == '65537'):
+            nc = rinput("Enter new input prompt colour: ", colours, True)
+            if (nc.lower() in colours):
+                style_codes['PFORMAT'] = style_codes[nc.lower()]
+                pprint("${COMMENTARY}Colour " + nc + " set as input prompt colour.")
+            else:
+                pprint("${COMMENTARY}invalid colour, ", endc='')
+        else:
+            style_codes = get_default_style_codes()
+            pprint("${COMMENTARY}Thank you for your confidence in the default settings - your changes to them have now been discarded.")
+        write_dic(fp + 'styles.hmconfig', style_codes)
+    else:
+        pprint('${COMMENTARY}', endc='')
 
 def export(silent=False):
     """
     Exports history to the environment that was last set into the currentenv.khtxt file, also updates Master.khtxt
-    
+
     (bool) silent(=False): if True, then the function is 'silenced' - has no interaction with the terminal output
     """
     global prevenv
-    f = open(fp + "currentenv.khtxt", 'r')
-    fc = f.readlines()
+    fc = read_file(fp + "currentenv.khtxt")
     env = fc[0].split()[0]
     lines = int(fc[1].split()[0])
-    #print("you earlier had " + str(lines) + " lines")
-    f.close()
     if (not silent):
         prevenv = env
-    f = open(fp + "currentenv.khtxt", 'w')
-    f.write("")
-    f.close()
+    write_file(fp + "currentenv.khtxt", '')
     if (env != 'Master'):
-        backup(lines)
+        backup(lines, silent)# if silenced, function must be called because error had occured in previous terminal session ...
     os.rename(dbh, fp + "history/" + env + ".khtxt")
     if (not silent):
         if (os.path.isfile(fp + '.bash_history_khbackup')):# if backup file exists, its not first time program is being executed
-            print("Exporting " + env + " history from previous session.")
+            pprint("${COMMENTARY}Exporting ${EMPHASIS}" + env + "{ENDFORMAT}$${COMMENTARY} history from previous session.${ENDFORMAT}")
         else:
-            print("Importing all previous History to the Master Environment")# first ever executing must be with env = "Master"
+            pprint("${COMMENTARY}Importing all previous History to the Master Environment.{ENDFORMAT}$")# first ever executing must be with env = "Master"
     time.sleep(1)
     return
 
-def backup(lines):
+#rewrite without preconditions? (assuming that history is nonempty, and that Master != currentenv)
+def get_last_master_entry():
+    """[helper function]returns the last entry from the history of Master - assuming that it exists, and that currentenv != Master"""
+    hist = read_file(fp + 'history/Master.khtxt')
+    return hist[-1]# hist must be nonempty - return the last entry, of the form "exit\n"
+
+def backup(lines, ercall=False):#def backup(lines):
     """
     [helper function] Updates Master ('backs up' history to the Master environment)
-    
+
     (int) lines: the number of lines in .bash_history that had been executed before the last session itself, and don't need updating into master
     """
-    f = open(dbh)
-    hist = f.readlines()
-    f.close()
+    hist = read_file(dbh)
+    if (lines < len(hist) and get_last_master_entry() == hist[lines]):
+        lines += 1
     fm = open(fp + 'history/Master.khtxt', 'a')
-    #print (hist)
-    #print(lines)
     while (lines < len(hist)):
-        #print("\t" + hist[lines][0:-1])
         fm.write(hist[lines])
         lines = lines + 1
     fm.close()
-    print("Updating Master Environment.")
+    pprint("${COMMENTARY}Updating Master Environment.{ENDFORMAT}$")#if (ercall): print("Updating Master Environment.")
 
 def safe_export():
     """
@@ -767,12 +872,12 @@ def safe_export():
     if ((ce != '')): #ie, file ~/.bash_history exists for sure
         export()
     else:
-        print("Error:  Incorrect setting of Environment in the last Terminal Session")
+        pprint("${ERRFORMAT}Error:  Incorrect setting of Environment in the last Terminal Session{ENDFORMAT}$")
         time.sleep(1)
-        print("        Attempting to Recover Lost History")
+        pprint("        ${COMMENTARY}Attempting to Recover Lost History{ENDFORMAT}$")
         time.sleep(1)
         if (os.path.isfile(dbh)):
-            print("        Successfully found History from last Terminal Session")
+            pprint("        ${COMMENTARY}Successfully found History from last Terminal Session{ENDFORMAT}$")
             envnum = 1
             d = read_dic(fp + 'environments.khtxt')
             for k in d:
@@ -781,23 +886,20 @@ def safe_export():
             envnum = str(str(envnum).zfill(4))
             print("        ", end='')
             newenv("Error-Env" + envnum)
-            f = open(fp + 'currentenv.khtxt', 'w')
-            f.write("Error-Env" + envnum)
-            f.write("\n")
-            f.write("0")
-            f.close()
+            write_file(fp + 'currentenv.khtxt', "Error-Env" + envnum + "\n" + "0")
             export(True)
             archivenv("Error-Env" + envnum)
-            print("        Exporting History to the (archived) environment \'Error-Env" + envnum + "\'")
-            time.sleep(0.5)
+            pprint("        ${COMMENTARY}Exporting History to the (archived) environment \'Error-Env" + envnum + "\'{ENDFORMAT}$")
+            time.sleep(2.5)
         else:
             time.sleep(1)
-            print("        No Commands were executed in the last Terminal Session")#Could not find History from the last Terminal Session")
+            pprint("        ${COMMENTARY}No Commands were executed in the last Terminal Session{ENDFORMAT}$")#Could not find History from the last Terminal Session")
+            time.sleep(1.5)
 
 def take_backup():
     """
     Takes a backup of the entire history (ie, the Master environment)
-    
+
     The '~/.khist/history/Master.khtxt' file is copied to '~/.khist/history/BashHistBackup.bhtxt' and to '~/.khist/.bash_history_khbackup'
     """
     copyfile(fp + 'history/Master.khtxt', fp + '.bash_history_khbackup')
@@ -806,41 +908,40 @@ def take_backup():
 def managehistory():
     """
     Function to manage program control flow ('managehistory')
-    
-    This happens through calls to other functions, in the following sequence:
+
+    This happens through calls to other functions, in the following sequence (apart from tab autocompletion and output formatting setup):
       safe_export   ->  to export history from previous session, and update Master
       take_backup   ->  to take a backup of the history
       set_env       ->  set the environment for the next session, if possible, based on the users choice
     """
+    global style_codes
+    try:
+        style_codes = read_dic(fp + 'styles.hmconfig')
+    except Exception as e:
+        style_codes = get_default_style_codes()
+        dumperror(e, False, True)
     safe_export()
     take_backup()
+    readline.parse_and_bind("tab: complete")
+    readline.set_completer(autocomplete_input)
     set_env()#user selects environment
 
-def dumperror(exc=None, base=None):
+def dumperror(exc=None, base=None, silent=False):
     """
     [helper function] Error handling function called if an Exception is caused at runtime
-    
-    Error handling includes displaying an appropriate message to the user, and printing debug data to the ~/.khist/errorlog.khtxt file. This includes a timestamp, the stacktrace, and the state of the environments.khtxt and currentenv.khtxt files. 
-    
+
+    Error handling includes displaying an appropriate message to the user, and printing debug data to the ~/.khist/errorlog.khtxt file. This includes a timestamp, the stacktrace, and the state of the environments.khtxt and currentenv.khtxt files.
+
     (BaseException) exc(=None): the Exception that occured
-    (bool) base(=None): if False, the error was caught by Exception clause, if True the error was caught by the except BaseException clause 
-    
+    (bool) base(=None): if False, the error was caught by `except Exception` clause, if True the error was caught by the `except BaseException` clause
+
     Integrity of the base argument is to be maintained by calling code. (ie, it is a precondition)
     """
     try:
-        print("")
-        print("")
-        print("\tERROR : An Error has Occured. Please Report it to histmanager@gmail.com")
-        print("\t        You can try Restarting the Terminal to check if the Problem Persists.")
-        print("")
         tm = time.localtime(time.time())
         timestamp = str(tm[0]) + '-' + str(tm[1]) + '-' + str(tm[2]) + ' ' + str(tm[3]) + ':' + str(tm[4]) + ':' + str(tm[5])
-        f = open(fp + 'currentenv.khtxt', 'r')
-        ce = f.readlines()
-        f.close()
-        f = open(fp + 'environments.khtxt', 'r')
-        envs = f.readlines()
-        f.close()
+        ce = read_file(fp + 'currentenv.khtxt')
+        envs = read_file(fp + 'environments.khtxt')
         f = open(fp + 'errorlog.khtxt', 'a')
         f.write("\n\n\n")
         f.write("==StartError================== " + timestamp + " ==================StartError==\n\n")
@@ -857,44 +958,55 @@ def dumperror(exc=None, base=None):
         f.write(traceback.format_exc())
         f.write("\n==EndError==================== " + timestamp + " ====================EndError==\n\n\n\n")
         f.close()
+        if (not silent):
+            print('\033[0m\033[31m')
+            print("")
+            print("\tERROR : An Error has Occured. Please Report it to histmanager@gmail.com")
+            print("\t        Meanwhile, you can try restarting the Terminal to check if the Problem Persists.")
+            print("\033[0m")
+            time.sleep(3)
     except:
-        print('')
+        traceback.print_exc()
+        print('\033[0m\033[31m')
         print("-------------------------------------------------------------")
         print("Unknown DumpError - Please Report it to histmanager@gmail.com")
         print("-------------------------------------------------------------")
         print('')
-        traceback.print_exc()
+        time.sleep(3)
+        print('\033[0m')
 
 def main():
     """
     Main function - invoked with each call to the script
-    
+
     An error proofed verion of managehistory(), which appropriately handles errors using dumperror()
     """
     try:
+        #write_dic(fp + 'styles.hmconfig', get_default_style_codes())
         managehistory()
     except Exception as e:
         dumperror(e, False)
     except BaseException as e:
         dumperror(e, True)
     except:
-        print('')
+        traceback.print_exc()
+        print('\033[0m\033[31m')
         print("-----------------------------------------------------------------")
         print("Unknown MainError - Please Report it to  to histmanager@gmail.com")
         print("-----------------------------------------------------------------")
         print('')
-        traceback.print_exc()
+        print('\033[0m')
+        time.sleep(3)
 
 if __name__ == '__main__':
     main()
-
 
 #   HistManager - Effectively Manage Terminal History
 #   Copyright (C) 2016  Kaivalya Rawal (histmanager@gmail.com)
 #
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of the GNU Affero General Public License as published by
-#   the Free Software Foundation, either version 3 of the License, or 
+#   the Free Software Foundation, either version 3 of the License, or
 #   any later version.
 #
 #   This program is distributed in the hope that it will be useful,
