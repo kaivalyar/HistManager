@@ -768,7 +768,7 @@ def viewhist(sysenv=None, displaymode=0):
 
 def disconfig(rchoice):
     """
-    Configures display styles
+    Configures display styles - the secret feature!
     """
     if (rchoice == '42' or rchoice == '73'):
         pprint("\n${EMPHASIS}[Configure Display]{ENDFORMAT}$ Choose a format number to execute: ")
