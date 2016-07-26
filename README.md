@@ -78,6 +78,8 @@ Here is a list of other quirks in the program. These aren't listed anywhere else
   * When selecting a display mode for viewing environment history, negative menu options can be used too, to sort the output alphabetically, rather than chronologically.
 * Merging Environments
   * When two environments are merged, their individual histories are first archived, and can thus be retrieved.
+* A Secret
+  * While the 'Quirks and Hacks' section here is meant to document any features that may not be obvious at first glance, one of them has been omitted. To discover this secret, hidden feature, use the source, or find it in the HistManager-Settings. Knowledge from the Hitchhiker's Guide to the Galaxy, the Big Bang Theory, or even the works of Pierre de Fermat could come in handy!
 
 ## Set Up
 
