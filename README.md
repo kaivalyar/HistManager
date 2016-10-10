@@ -1,4 +1,6 @@
 #HistManager
+
+[![Join the chat at https://gitter.im/HistManager/Lobby](https://badges.gitter.im/HistManager/Lobby.svg)](https://gitter.im/HistManager/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 A tool to manage terminal history for Bash based Linux environments.
 
 =================================
