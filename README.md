@@ -1,4 +1,4 @@
-#HistManager
+# HistManager
 
 [![Join the chat at https://gitter.im/HistManager/Lobby](https://badges.gitter.im/HistManager/Lobby.svg)](https://gitter.im/HistManager/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
@@ -99,7 +99,7 @@ The installation module of this project is a work in progress. For now, follow t
  4. Move the `uninstall-histmanager.sh` file created in your home directory to an appropriate location. **Do not delete this file**.
  5. Restart the Terminal to check installation and begin using HistManager.
 
-###Uninstallation
+### Uninstallation
 The uninstallation module of this project is also a work in progress. For now, follow the following steps to uninstall:
  1. Move the `uninstall-histmanager.sh` file created at installation time back into your home directory.
  2. Open the Terminal, and select the _Master_ environment, if possible.
